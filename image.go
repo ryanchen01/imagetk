@@ -209,6 +209,21 @@ func GetImageFromArray(data any) (*Image, error) {
 	return img, nil
 }
 
+// GetPixelType returns the pixel type of the image.
+// Returns:
+//   - int: An integer representing the pixel type.
+//
+// The function returns one of the following pixel types:
+//   - PixelTypeUInt8
+//   - PixelTypeInt8
+//   - PixelTypeUInt16
+//   - PixelTypeInt16
+//   - PixelTypeUInt32
+//   - PixelTypeInt32
+//   - PixelTypeUInt64
+//   - PixelTypeInt64
+//   - PixelTypeFloat32
+//   - PixelTypeFloat64
 func (img *Image) GetPixelType() int {
 	return img.pixelType
 }
@@ -612,6 +627,307 @@ func (img *Image) GetPixelAsFloat64(index []uint32) (float64, error) {
 	default:
 		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
+}
+
+// AsType creates a new Image with the specified pixel type and copies the pixel data from the current image.
+// Parameters:
+//   - pixelType: An integer representing the type of pixels.
+//
+// Supported pixel types are:
+//   - PixelTypeUInt8
+//   - PixelTypeInt8
+//   - PixelTypeUInt16
+//   - PixelTypeInt16
+//   - PixelTypeUInt32
+//   - PixelTypeInt32
+//   - PixelTypeUInt64
+//   - PixelTypeInt64
+//   - PixelTypeFloat32
+//   - PixelTypeFloat64
+//
+// Returns:
+//   - *Image: A pointer to the created Image.
+//   - error: An error if the image creation or pixel conversion fails.
+//
+// If the current pixel type is the same as the specified pixel type, the function returns the current image without copying the pixel data.
+func (img *Image) AsType(pixelType int) (*Image, error) {
+	if img.pixelType == pixelType {
+		return img, nil
+	}
+
+	newImg, err := NewImage(img.size, pixelType)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(img.size); i++ {
+		newImg.spacing[i] = img.spacing[i]
+		newImg.origin[i] = img.origin[i]
+	}
+
+	newImg.direction = img.direction
+
+	numPixels := 1
+	for _, s := range img.size {
+		numPixels *= int(s)
+	}
+
+	switch pixelType {
+	case PixelTypeUInt8:
+		newPixelData := make([]uint8, numPixels)
+		for i := 0; i < numPixels; i++ {
+			switch img.pixelType {
+			case PixelTypeInt8:
+				newPixelData[i] = uint8(img.pixels.([]int8)[i])
+			case PixelTypeUInt16:
+				newPixelData[i] = uint8(img.pixels.([]uint16)[i])
+			case PixelTypeInt16:
+				newPixelData[i] = uint8(img.pixels.([]int16)[i])
+			case PixelTypeUInt32:
+				newPixelData[i] = uint8(img.pixels.([]uint32)[i])
+			case PixelTypeInt32:
+				newPixelData[i] = uint8(img.pixels.([]int32)[i])
+			case PixelTypeUInt64:
+				newPixelData[i] = uint8(img.pixels.([]uint64)[i])
+			case PixelTypeInt64:
+				newPixelData[i] = uint8(img.pixels.([]int64)[i])
+			case PixelTypeFloat32:
+				newPixelData[i] = uint8(img.pixels.([]float32)[i])
+			case PixelTypeFloat64:
+				newPixelData[i] = uint8(img.pixels.([]float64)[i])
+			}
+		}
+		newImg.pixels = newPixelData
+	case PixelTypeInt8:
+		newPixelData := make([]int8, numPixels)
+		for i := 0; i < numPixels; i++ {
+			switch img.pixelType {
+			case PixelTypeUInt8:
+				newPixelData[i] = int8(img.pixels.([]uint8)[i])
+			case PixelTypeUInt16:
+				newPixelData[i] = int8(img.pixels.([]uint16)[i])
+			case PixelTypeInt16:
+				newPixelData[i] = int8(img.pixels.([]int16)[i])
+			case PixelTypeUInt32:
+				newPixelData[i] = int8(img.pixels.([]uint32)[i])
+			case PixelTypeInt32:
+				newPixelData[i] = int8(img.pixels.([]int32)[i])
+			case PixelTypeUInt64:
+				newPixelData[i] = int8(img.pixels.([]uint64)[i])
+			case PixelTypeInt64:
+				newPixelData[i] = int8(img.pixels.([]int64)[i])
+			case PixelTypeFloat32:
+				newPixelData[i] = int8(img.pixels.([]float32)[i])
+			case PixelTypeFloat64:
+				newPixelData[i] = int8(img.pixels.([]float64)[i])
+			}
+		}
+		newImg.pixels = newPixelData
+	case PixelTypeUInt16:
+		newPixelData := make([]uint16, numPixels)
+		for i := 0; i < numPixels; i++ {
+			switch img.pixelType {
+			case PixelTypeUInt8:
+				newPixelData[i] = uint16(img.pixels.([]uint8)[i])
+			case PixelTypeInt8:
+				newPixelData[i] = uint16(img.pixels.([]int8)[i])
+			case PixelTypeInt16:
+				newPixelData[i] = uint16(img.pixels.([]int16)[i])
+			case PixelTypeUInt32:
+				newPixelData[i] = uint16(img.pixels.([]uint32)[i])
+			case PixelTypeInt32:
+				newPixelData[i] = uint16(img.pixels.([]int32)[i])
+			case PixelTypeUInt64:
+				newPixelData[i] = uint16(img.pixels.([]uint64)[i])
+			case PixelTypeInt64:
+				newPixelData[i] = uint16(img.pixels.([]int64)[i])
+			case PixelTypeFloat32:
+				newPixelData[i] = uint16(img.pixels.([]float32)[i])
+			case PixelTypeFloat64:
+				newPixelData[i] = uint16(img.pixels.([]float64)[i])
+			}
+		}
+		newImg.pixels = newPixelData
+	case PixelTypeInt16:
+		newPixelData := make([]int16, numPixels)
+		for i := 0; i < numPixels; i++ {
+			switch img.pixelType {
+			case PixelTypeUInt8:
+				newPixelData[i] = int16(img.pixels.([]uint8)[i])
+			case PixelTypeInt8:
+				newPixelData[i] = int16(img.pixels.([]int8)[i])
+			case PixelTypeUInt16:
+				newPixelData[i] = int16(img.pixels.([]uint16)[i])
+			case PixelTypeUInt32:
+				newPixelData[i] = int16(img.pixels.([]uint32)[i])
+			case PixelTypeInt32:
+				newPixelData[i] = int16(img.pixels.([]int32)[i])
+			case PixelTypeUInt64:
+				newPixelData[i] = int16(img.pixels.([]uint64)[i])
+			case PixelTypeInt64:
+				newPixelData[i] = int16(img.pixels.([]int64)[i])
+			case PixelTypeFloat32:
+				newPixelData[i] = int16(img.pixels.([]float32)[i])
+			case PixelTypeFloat64:
+				newPixelData[i] = int16(img.pixels.([]float64)[i])
+			}
+		}
+		newImg.pixels = newPixelData
+	case PixelTypeUInt32:
+		newPixelData := make([]uint32, numPixels)
+		for i := 0; i < numPixels; i++ {
+			switch img.pixelType {
+			case PixelTypeUInt8:
+				newPixelData[i] = uint32(img.pixels.([]uint8)[i])
+			case PixelTypeInt8:
+				newPixelData[i] = uint32(img.pixels.([]int8)[i])
+			case PixelTypeUInt16:
+				newPixelData[i] = uint32(img.pixels.([]uint16)[i])
+			case PixelTypeInt16:
+				newPixelData[i] = uint32(img.pixels.([]int16)[i])
+			case PixelTypeInt32:
+				newPixelData[i] = uint32(img.pixels.([]int32)[i])
+			case PixelTypeUInt64:
+				newPixelData[i] = uint32(img.pixels.([]uint64)[i])
+			case PixelTypeInt64:
+				newPixelData[i] = uint32(img.pixels.([]int64)[i])
+			case PixelTypeFloat32:
+				newPixelData[i] = uint32(img.pixels.([]float32)[i])
+			case PixelTypeFloat64:
+				newPixelData[i] = uint32(img.pixels.([]float64)[i])
+			}
+		}
+		newImg.pixels = newPixelData
+	case PixelTypeInt32:
+		newPixelData := make([]int32, numPixels)
+		for i := 0; i < numPixels; i++ {
+			switch img.pixelType {
+			case PixelTypeUInt8:
+				newPixelData[i] = int32(img.pixels.([]uint8)[i])
+			case PixelTypeInt8:
+				newPixelData[i] = int32(img.pixels.([]int8)[i])
+			case PixelTypeUInt16:
+				newPixelData[i] = int32(img.pixels.([]uint16)[i])
+			case PixelTypeInt16:
+				newPixelData[i] = int32(img.pixels.([]int16)[i])
+			case PixelTypeUInt32:
+				newPixelData[i] = int32(img.pixels.([]uint32)[i])
+			case PixelTypeUInt64:
+				newPixelData[i] = int32(img.pixels.([]uint64)[i])
+			case PixelTypeInt64:
+				newPixelData[i] = int32(img.pixels.([]int64)[i])
+			case PixelTypeFloat32:
+				newPixelData[i] = int32(img.pixels.([]float32)[i])
+			case PixelTypeFloat64:
+				newPixelData[i] = int32(img.pixels.([]float64)[i])
+			}
+		}
+		newImg.pixels = newPixelData
+	case PixelTypeUInt64:
+		newPixelData := make([]uint64, numPixels)
+		for i := 0; i < numPixels; i++ {
+			switch img.pixelType {
+			case PixelTypeUInt8:
+				newPixelData[i] = uint64(img.pixels.([]uint8)[i])
+			case PixelTypeInt8:
+				newPixelData[i] = uint64(img.pixels.([]int8)[i])
+			case PixelTypeUInt16:
+				newPixelData[i] = uint64(img.pixels.([]uint16)[i])
+			case PixelTypeInt16:
+				newPixelData[i] = uint64(img.pixels.([]int16)[i])
+			case PixelTypeUInt32:
+				newPixelData[i] = uint64(img.pixels.([]uint32)[i])
+			case PixelTypeInt32:
+				newPixelData[i] = uint64(img.pixels.([]int32)[i])
+			case PixelTypeInt64:
+				newPixelData[i] = uint64(img.pixels.([]int64)[i])
+			case PixelTypeFloat32:
+				newPixelData[i] = uint64(img.pixels.([]float32)[i])
+			case PixelTypeFloat64:
+				newPixelData[i] = uint64(img.pixels.([]float64)[i])
+			}
+		}
+		newImg.pixels = newPixelData
+	case PixelTypeInt64:
+		newPixelData := make([]int64, numPixels)
+		for i := 0; i < numPixels; i++ {
+			switch img.pixelType {
+			case PixelTypeUInt8:
+				newPixelData[i] = int64(img.pixels.([]uint8)[i])
+			case PixelTypeInt8:
+				newPixelData[i] = int64(img.pixels.([]int8)[i])
+			case PixelTypeUInt16:
+				newPixelData[i] = int64(img.pixels.([]uint16)[i])
+			case PixelTypeInt16:
+				newPixelData[i] = int64(img.pixels.([]int16)[i])
+			case PixelTypeUInt32:
+				newPixelData[i] = int64(img.pixels.([]uint32)[i])
+			case PixelTypeInt32:
+				newPixelData[i] = int64(img.pixels.([]int32)[i])
+			case PixelTypeUInt64:
+				newPixelData[i] = int64(img.pixels.([]uint64)[i])
+			case PixelTypeFloat32:
+				newPixelData[i] = int64(img.pixels.([]float32)[i])
+			case PixelTypeFloat64:
+				newPixelData[i] = int64(img.pixels.([]float64)[i])
+			}
+		}
+		newImg.pixels = newPixelData
+	case PixelTypeFloat32:
+		newPixelData := make([]float32, numPixels)
+		for i := 0; i < numPixels; i++ {
+			switch img.pixelType {
+			case PixelTypeUInt8:
+				newPixelData[i] = float32(img.pixels.([]uint8)[i])
+			case PixelTypeInt8:
+				newPixelData[i] = float32(img.pixels.([]int8)[i])
+			case PixelTypeUInt16:
+				newPixelData[i] = float32(img.pixels.([]uint16)[i])
+			case PixelTypeInt16:
+				newPixelData[i] = float32(img.pixels.([]int16)[i])
+			case PixelTypeUInt32:
+				newPixelData[i] = float32(img.pixels.([]uint32)[i])
+			case PixelTypeInt32:
+				newPixelData[i] = float32(img.pixels.([]int32)[i])
+			case PixelTypeUInt64:
+				newPixelData[i] = float32(img.pixels.([]uint64)[i])
+			case PixelTypeInt64:
+				newPixelData[i] = float32(img.pixels.([]int64)[i])
+			case PixelTypeFloat64:
+				newPixelData[i] = float32(img.pixels.([]float64)[i])
+			}
+		}
+		newImg.pixels = newPixelData
+	case PixelTypeFloat64:
+		newPixelData := make([]float64, numPixels)
+		for i := 0; i < numPixels; i++ {
+			switch img.pixelType {
+			case PixelTypeUInt8:
+				newPixelData[i] = float64(img.pixels.([]uint8)[i])
+			case PixelTypeInt8:
+				newPixelData[i] = float64(img.pixels.([]int8)[i])
+			case PixelTypeUInt16:
+				newPixelData[i] = float64(img.pixels.([]uint16)[i])
+			case PixelTypeInt16:
+				newPixelData[i] = float64(img.pixels.([]int16)[i])
+			case PixelTypeUInt32:
+				newPixelData[i] = float64(img.pixels.([]uint32)[i])
+			case PixelTypeInt32:
+				newPixelData[i] = float64(img.pixels.([]int32)[i])
+			case PixelTypeUInt64:
+				newPixelData[i] = float64(img.pixels.([]uint64)[i])
+			case PixelTypeInt64:
+				newPixelData[i] = float64(img.pixels.([]int64)[i])
+			case PixelTypeFloat32:
+				newPixelData[i] = float64(img.pixels.([]float32)[i])
+			}
+		}
+		newImg.pixels = newPixelData
+	default:
+		return nil, fmt.Errorf("unsupported pixel type: %d", pixelType)
+	}
+
+	return newImg, nil
 }
 
 func (img *Image) SetSpacing(spacing []float64) error {
