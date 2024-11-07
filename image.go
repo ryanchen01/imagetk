@@ -625,7 +625,7 @@ func (img *Image) GetPixelAsFloat64(index []uint32) (float64, error) {
 	case PixelTypeFloat64:
 		return img.pixels.([]float64)[idx], nil
 	default:
-		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+		return -1, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
 }
 
@@ -963,55 +963,65 @@ func (img *Image) SetPixel(index []uint32, value any) error {
 	}
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		if _, ok := value.(uint8); !ok {
-			return fmt.Errorf("invalid value type, expected uint8, got %T", value)
+		pixelValue, err := getValueAsPixelType(value, PixelTypeUInt8)
+		if err != nil {
+			return err
 		}
-		img.pixels.([]uint8)[idx] = value.(uint8)
+		img.pixels.([]uint8)[idx] = pixelValue.(uint8)
 	case PixelTypeInt8:
-		if _, ok := value.(int8); !ok {
-			return fmt.Errorf("invalid value type, expected int8, got %T", value)
+		pixelValue, err := getValueAsPixelType(value, PixelTypeInt8)
+		if err != nil {
+			return err
 		}
-		img.pixels.([]int8)[idx] = value.(int8)
+		img.pixels.([]int8)[idx] = pixelValue.(int8)
 	case PixelTypeUInt16:
-		if _, ok := value.(uint16); !ok {
-			return fmt.Errorf("invalid value type, expected uint16, got %T", value)
+		pixelValue, err := getValueAsPixelType(value, PixelTypeUInt16)
+		if err != nil {
+			return err
 		}
-		img.pixels.([]uint16)[idx] = value.(uint16)
+		img.pixels.([]uint16)[idx] = pixelValue.(uint16)
 	case PixelTypeInt16:
-		if _, ok := value.(int16); !ok {
-			return fmt.Errorf("invalid value type, expected int16, got %T", value)
+		pixelValue, err := getValueAsPixelType(value, PixelTypeInt16)
+		if err != nil {
+			return err
 		}
-		img.pixels.([]int16)[idx] = value.(int16)
+		img.pixels.([]int16)[idx] = pixelValue.(int16)
 	case PixelTypeUInt32:
-		if _, ok := value.(uint32); !ok {
-			return fmt.Errorf("invalid value type, expected uint32, got %T", value)
+		pixelValue, err := getValueAsPixelType(value, PixelTypeUInt32)
+		if err != nil {
+			return err
 		}
-		img.pixels.([]uint32)[idx] = value.(uint32)
+		img.pixels.([]uint32)[idx] = pixelValue.(uint32)
 	case PixelTypeInt32:
-		if _, ok := value.(int32); !ok {
-			return fmt.Errorf("invalid value type, expected int32, got %T", value)
+		pixelValue, err := getValueAsPixelType(value, PixelTypeInt32)
+		if err != nil {
+			return err
 		}
-		img.pixels.([]int32)[idx] = value.(int32)
+		img.pixels.([]int32)[idx] = pixelValue.(int32)
 	case PixelTypeUInt64:
-		if _, ok := value.(uint64); !ok {
-			return fmt.Errorf("invalid value type, expected uint64, got %T", value)
+		pixelValue, err := getValueAsPixelType(value, PixelTypeUInt64)
+		if err != nil {
+			return err
 		}
-		img.pixels.([]uint64)[idx] = value.(uint64)
+		img.pixels.([]uint64)[idx] = pixelValue.(uint64)
 	case PixelTypeInt64:
-		if _, ok := value.(int64); !ok {
-			return fmt.Errorf("invalid value type, expected int64, got %T", value)
+		pixelValue, err := getValueAsPixelType(value, PixelTypeInt64)
+		if err != nil {
+			return err
 		}
-		img.pixels.([]int64)[idx] = value.(int64)
+		img.pixels.([]int64)[idx] = pixelValue.(int64)
 	case PixelTypeFloat32:
-		if _, ok := value.(float32); !ok {
-			return fmt.Errorf("invalid value type, expected float32, got %T", value)
+		pixelValue, err := getValueAsPixelType(value, PixelTypeFloat32)
+		if err != nil {
+			return err
 		}
-		img.pixels.([]float32)[idx] = value.(float32)
+		img.pixels.([]float32)[idx] = pixelValue.(float32)
 	case PixelTypeFloat64:
-		if _, ok := value.(float64); !ok {
-			return fmt.Errorf("invalid value type, expected float64, got %T", value)
+		pixelValue, err := getValueAsPixelType(value, PixelTypeFloat64)
+		if err != nil {
+			return err
 		}
-		img.pixels.([]float64)[idx] = value.(float64)
+		img.pixels.([]float64)[idx] = pixelValue.(float64)
 	default:
 		return fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
