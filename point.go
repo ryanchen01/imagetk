@@ -10,50 +10,87 @@ func (img *Image) GetPixelFromPoint(point []float64) (float64, error) {
 		return 0.0, fmt.Errorf("point dimension does not match image dimension")
 	}
 
-	index := make([]uint32, img.dimension)
-	for i := 0; i < int(img.dimension); i++ {
-		index[i] = uint32((point[i] - img.origin[i]) / img.spacing[i])
-		if index[i] >= img.size[i] {
-			return 0.0, nil
+	dim := int(img.dimension)
+	index := make([]int64, dim)
+	t := make([]float64, dim)
+	isExact := true
+
+	for i := 0; i < dim; i++ {
+		// Compute the float index
+		floatIndex := (point[i]-img.origin[i])/img.spacing[i] - 0.5
+		index[i] = int64(math.Floor(floatIndex))
+		t[i] = floatIndex - float64(index[i])
+
+		if t[i] != 0 {
+			isExact = false
+		}
+
+		// Check index bounds
+		if index[i] < 0 {
+			// Outside image bounds
+			index[i] = 0
+		} else if index[i] >= int64(img.size[i]) {
+			index[i] = int64(img.size[i]) - 1
+		}
+
+		// If we need to interpolate (t[i] != 0) but we're at the last index, we can't go beyond the image boundary
+		if t[i] != 0 && index[i] == int64(img.size[i])-1 {
+			index[i] = int64(img.size[i]) - 2
 		}
 	}
-
-	corners := make([][]uint32, 1<<len(index))
-	for i := 0; i < len(corners); i++ {
-		corners[i] = make([]uint32, len(index))
-		for j := 0; j < len(index); j++ {
-			if i&(1<<j) != 0 {
-				corners[i][j] = index[j] + 1
-			}
+	// If the point is exactly on a pixel, return that pixel value
+	if isExact {
+		uintIndex := make([]uint32, dim)
+		for i := 0; i < dim; i++ {
+			uintIndex[i] = uint32(index[i])
 		}
-	}
-	fmt.Println("Corners:")
-	fmt.Println(corners)
-
-	sumWeights := 0.0
-	weights := make([]float64, len(corners))
-	for i := 0; i < len(corners); i++ {
-		distToPoint := 0.0
-		for j := 0; j < len(index); j++ {
-			cornerPoint := img.origin[j] + float64(corners[i][j])*img.spacing[j]
-			distToPoint += math.Pow(point[j]-cornerPoint, 2)
-		}
-		distToPoint = math.Sqrt(distToPoint)
-		weights[i] = 1 / distToPoint
-		sumWeights += weights[i]
-	}
-
-	for i := 0; i < len(weights); i++ {
-		weights[i] /= sumWeights
-	}
-
-	pixelValue := 0.0
-	for i := 0; i < len(corners); i++ {
-		cornerValue, err := img.GetPixelAsFloat64(corners[i])
-		if err != nil && cornerValue != 0.0 {
+		pixelValue, err := img.GetPixelAsFloat64(uintIndex)
+		if err != nil {
 			return 0.0, err
 		}
-		pixelValue += weights[i] * float64(cornerValue)
+		return pixelValue, nil
+	}
+
+	// Compute the corners and weights for interpolation
+	numCorners := 1 << dim // 2^dim combinations
+	pixelValue := 0.0
+	for i := 0; i < numCorners; i++ {
+		weight := 1.0
+		cornerIndex := make([]int64, dim)
+		validCorner := true
+		for j := 0; j < dim; j++ {
+			if (i>>j)&1 == 0 {
+				// Use the floor index
+				cornerIndex[j] = index[j]
+				weight *= (1 - t[j])
+			} else {
+				// Use the next index
+				cornerIndex[j] = index[j] + 1
+				weight *= t[j]
+			}
+
+			// Check cornerIndex bounds
+			if cornerIndex[j] < 0 || cornerIndex[j] >= int64(img.size[j]) {
+				validCorner = false
+				break
+			}
+		}
+
+		if !validCorner || weight == 0 {
+			continue
+		}
+
+		// Convert cornerIndex to []uint32 for GetPixelAsFloat64
+		uintCornerIndex := make([]uint32, dim)
+		for j := 0; j < dim; j++ {
+			uintCornerIndex[j] = uint32(cornerIndex[j])
+		}
+
+		cornerValue, err := img.GetPixelAsFloat64(uintCornerIndex)
+		if err != nil {
+			return 0.0, err
+		}
+		pixelValue += weight * cornerValue
 	}
 
 	return pixelValue, nil

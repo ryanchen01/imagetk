@@ -35,10 +35,18 @@ func linearResample(img *Image, interpolation LinearInterpolation) (*Image, erro
 		numPixels *= int(interpolation.size[i])
 	}
 
+	strides := make([]int, len(interpolation.size))
+	strides[len(interpolation.size)-1] = 1
+	for i := len(interpolation.size) - 2; i >= 0; i-- {
+		strides[i] = strides[i+1] * int(interpolation.size[i+1])
+	}
+
 	for i := 0; i < numPixels; i++ {
 		point := make([]float64, len(interpolation.size))
+		idx := i
 		for j := 0; j < len(interpolation.size); j++ {
-			point[j] = interpolation.origin[j] + float64(i)*interpolation.spacing[j]
+			point[j] = float64(idx/strides[j])*interpolation.spacing[j] + interpolation.origin[j] + interpolation.spacing[j]/2
+			idx %= strides[j]
 		}
 		value, err := img.GetPixelFromPoint(point)
 		if err != nil {
@@ -50,10 +58,10 @@ func linearResample(img *Image, interpolation LinearInterpolation) (*Image, erro
 			return nil, err
 		}
 		index := make([]uint32, len(interpolation.size))
-		idx := i
+		idx = i
 		for j := 0; j < len(interpolation.size); j++ {
-			index[j] = uint32(idx % int(interpolation.size[j]))
-			idx /= int(interpolation.size[j])
+			index[j] = uint32(idx / strides[j])
+			idx %= strides[j]
 		}
 		err = newImg.SetPixel(index, pixelValue)
 		if err != nil {
