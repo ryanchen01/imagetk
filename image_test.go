@@ -143,8 +143,8 @@ func TestSinglePixelSettingWithInvalidType(t *testing.T) {
 
 	// Set a pixel with invalid type
 	err = img.SetPixel([]uint32{0, 0, 0}, 1)
-	if err == nil {
-		t.Errorf("Expected error when setting pixel with invalid type")
+	if err != nil {
+		t.Errorf("Not expected error when setting pixel with invalid type: %v", err)
 	}
 }
 

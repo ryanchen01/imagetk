@@ -42,7 +42,7 @@ func TestLinearInterpolation(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error getting pixel value: %v", err)
 	}
-	if pixelValue != 1 {
+	if pixelValue != float32(1) {
 		t.Errorf("Expected pixel value to be 1, got %v", pixelValue)
 	}
 
