@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-func (img *Image) GetPixelFromPoint(point []float64) (float64, error) {
+func (img *Image) GetPixelFromPoint(point []float64, fillType int) (float64, error) {
 	if len(point) != int(img.dimension) {
 		return 0.0, fmt.Errorf("point dimension does not match image dimension")
 	}
@@ -26,16 +26,18 @@ func (img *Image) GetPixelFromPoint(point []float64) (float64, error) {
 		}
 
 		// Check index bounds
-		if index[i] < 0 {
-			// Outside image bounds
-			index[i] = 0
-		} else if index[i] >= int64(img.size[i]) {
-			index[i] = int64(img.size[i]) - 1
-		}
-
-		// If we need to interpolate (t[i] != 0) but we're at the last index, we can't go beyond the image boundary
-		if t[i] != 0 && index[i] == int64(img.size[i])-1 {
-			index[i] = int64(img.size[i]) - 2
+		if fillType == FillTypeZero {
+			if index[i] < -1 || index[i] >= int64(img.size[i]) {
+				return 0.0, nil
+			}
+		} else if fillType == FillTypeNearest {
+			if index[i] < 0 {
+				index[i] = 0
+			} else if index[i] >= int64(img.size[i]) {
+				index[i] = int64(img.size[i]) - 1
+			}
+		} else {
+			return 0.0, fmt.Errorf("unknown fill type")
 		}
 	}
 	// If the point is exactly on a pixel, return that pixel value

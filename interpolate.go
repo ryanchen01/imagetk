@@ -7,7 +7,13 @@ type LinearInterpolation struct {
 	spacing   []float64
 	origin    []float64
 	direction [9]float64
+	fillType  int
 }
+
+const (
+	FillTypeZero = iota
+	FillTypeNearest
+)
 
 func (img *Image) Resample(interpolation any) (*Image, error) {
 	switch interpolation := interpolation.(type) {
@@ -48,7 +54,7 @@ func linearResample(img *Image, interpolation LinearInterpolation) (*Image, erro
 			point[j] = float64(idx/strides[j])*interpolation.spacing[j] + interpolation.origin[j] + interpolation.spacing[j]/2
 			idx %= strides[j]
 		}
-		value, err := img.GetPixelFromPoint(point)
+		value, err := img.GetPixelFromPoint(point, interpolation.fillType)
 		if err != nil {
 			return nil, err
 		}
