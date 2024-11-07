@@ -17,7 +17,7 @@ func (img *Image) GetPixelFromPoint(point []float64, fillType int) (float64, err
 
 	for i := 0; i < dim; i++ {
 		// Compute the float index
-		floatIndex := (point[i]-img.origin[i])/img.spacing[i] - 0.5
+		floatIndex := (point[i] - img.origin[i]) / img.spacing[i]
 		index[i] = int64(math.Floor(floatIndex))
 		t[i] = floatIndex - float64(index[i])
 

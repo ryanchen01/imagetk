@@ -51,14 +51,14 @@ func linearResample(img *Image, interpolation LinearInterpolation) (*Image, erro
 		point := make([]float64, len(interpolation.size))
 		idx := i
 		for j := 0; j < len(interpolation.size); j++ {
-			point[j] = float64(idx/strides[j])*interpolation.spacing[j] + interpolation.origin[j] + interpolation.spacing[j]/2
+			point[j] = float64(idx/strides[j])*interpolation.spacing[j] + interpolation.origin[j]
 			idx %= strides[j]
 		}
 		value, err := img.GetPixelFromPoint(point, interpolation.fillType)
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(point, value)
+
 		pixelValue, err := getValueAsPixelType(value, newImg.pixelType)
 		if err != nil {
 			return nil, err
