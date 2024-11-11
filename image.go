@@ -36,8 +36,8 @@ const (
 // Fields:
 // - pixels: The pixel data of the image, type can vary.
 // - pixelType: An integer representing the type of pixels.
-// - dimension: The number of dimensions of the image.
-// - size: A slice of uint32 representing the size of the image in each dimension.
+// - dimension: The number of dimensions of the image (2<=N<=3).
+// - size: A slice of uint32 representing the size of the image in each dimension (2<=N<=3).
 // - spacing: A slice of float64 representing the spacing between pixels in each dimension.
 // - origin: A slice of float64 representing the origin of the image.
 // - direction: An array of 9 float64 values representing the direction cosines of the image.
@@ -72,7 +72,7 @@ type Image struct {
 //   - *Image: A pointer to the created Image.
 //   - error: An error if the image creation fails.
 func NewImage(size []uint32, pixelType int) (*Image, error) {
-	if len(size) == 0 {
+	if len(size) < 2 || len(size) > 3 {
 		return nil, fmt.Errorf("invalid size length: %d", len(size))
 	}
 
