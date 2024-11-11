@@ -331,9 +331,12 @@ func TestPixelGetting(t *testing.T) {
 }
 
 func TestAsType(t *testing.T) {
-	pixels := make([]float32, 10)
+	pixels := make([][]float32, 10)
 	for i := 0; i < 10; i++ {
-		pixels[i] = float32(i) * 0.5
+		pixels[i] = make([]float32, 10)
+		for j := 0; j < 10; j++ {
+			pixels[i][j] = float32(i*10 + j)
+		}
 	}
 
 	// Create a new image
@@ -351,7 +354,7 @@ func TestAsType(t *testing.T) {
 		t.Errorf("Expected pixel type to be PixelTypeUInt8, got %v", uin8Img.GetPixelType())
 	}
 
-	pixelValue, err := uin8Img.GetPixel([]uint32{0})
+	pixelValue, err := uin8Img.GetPixel([]uint32{0, 0})
 	if err != nil {
 		t.Errorf("Error getting pixel: %v", err)
 	}
@@ -361,17 +364,19 @@ func TestAsType(t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		pixel, err := uin8Img.GetPixel([]uint32{uint32(i)})
-		if err != nil {
-			t.Errorf("Error getting pixel: %v", err)
-		}
+		for j := 0; j < 10; j++ {
+			pixel, err := uin8Img.GetPixel([]uint32{uint32(i), uint32(j)})
+			if err != nil {
+				t.Errorf("Error getting pixel: %v", err)
+			}
 
-		expected, err := img.GetPixel([]uint32{uint32(i)})
-		if err != nil {
-			t.Errorf("Error getting pixel as uint8: %v", err)
-		}
-		if pixel.(uint8) != uint8(expected.(float32)) {
-			t.Errorf("Expected pixel value %v to be %v, got %v", expected, uint8(expected.(float32)), pixel)
+			expected, err := img.GetPixel([]uint32{uint32(i), uint32(j)})
+			if err != nil {
+				t.Errorf("Error getting pixel as uint8: %v", err)
+			}
+			if pixel.(uint8) != uint8(expected.(float32)) {
+				t.Errorf("Expected pixel value %v to be %v, got %v", expected, uint8(expected.(float32)), pixel)
+			}
 		}
 	}
 }
