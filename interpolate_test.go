@@ -18,10 +18,10 @@ func TestLinearInterpolation(t *testing.T) {
 	img.SetOrigin([]float64{0.5, 0.5})
 
 	interpolator := LinearInterpolation{
-		size:      []uint32{8, 8},
-		spacing:   []float64{0.5, 0.5},
-		origin:    []float64{0.25, 0.25},
-		direction: [9]float64{1, 0, 0, 0, 1, 0, 0, 0, 1},
+		Size:      []uint32{8, 8},
+		Spacing:   []float64{0.5, 0.5},
+		Origin:    []float64{0.25, 0.25},
+		Direction: [9]float64{1, 0, 0, 0, 1, 0, 0, 0, 1},
 	}
 	newImg, err := img.Resample(interpolator)
 	if err != nil {
@@ -57,10 +57,10 @@ func TestLinearInterpolation2(t *testing.T) {
 	img.SetOrigin([]float64{0.5, 0.5})
 
 	interpolator := LinearInterpolation{
-		size:      []uint32{5, 5},
-		spacing:   []float64{3.0 / 5.0, 3.0 / 5.0},
-		origin:    []float64{3.0 / 5.0 / 2, 3.0 / 5.0 / 2},
-		direction: [9]float64{1, 0, 0, 0, 1, 0, 0, 0, 1},
+		Size:      []uint32{5, 5},
+		Spacing:   []float64{3.0 / 5.0, 3.0 / 5.0},
+		Origin:    []float64{3.0 / 5.0 / 2, 3.0 / 5.0 / 2},
+		Direction: [9]float64{1, 0, 0, 0, 1, 0, 0, 0, 1},
 	}
 	newImg, err := img.Resample(interpolator)
 	if err != nil {

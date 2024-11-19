@@ -3,11 +3,11 @@ package imagetk
 import "fmt"
 
 type LinearInterpolation struct {
-	size      []uint32
-	spacing   []float64
-	origin    []float64
-	direction [9]float64
-	fillType  int
+	Size      []uint32
+	Spacing   []float64
+	Origin    []float64
+	Direction [9]float64
+	FillType  int
 }
 
 const (
@@ -26,35 +26,35 @@ func (img *Image) Resample(interpolation any) (*Image, error) {
 
 func linearResample(img *Image, interpolation LinearInterpolation) (*Image, error) {
 	// Create a new image
-	newImg, err := NewImage(interpolation.size, img.GetPixelType())
+	newImg, err := NewImage(interpolation.Size, img.GetPixelType())
 	if err != nil {
 		return nil, err
 	}
 
 	// Copy the origin, spacing and direction
-	newImg.SetOrigin(interpolation.origin)
-	newImg.SetSpacing(interpolation.spacing)
-	newImg.SetDirection(interpolation.direction)
+	newImg.SetOrigin(interpolation.Origin)
+	newImg.SetSpacing(interpolation.Spacing)
+	newImg.SetDirection(interpolation.Direction)
 
 	numPixels := 1
-	for i := 0; i < len(interpolation.size); i++ {
-		numPixels *= int(interpolation.size[i])
+	for i := 0; i < len(interpolation.Size); i++ {
+		numPixels *= int(interpolation.Size[i])
 	}
 
-	strides := make([]int, len(interpolation.size))
-	strides[len(interpolation.size)-1] = 1
-	for i := len(interpolation.size) - 2; i >= 0; i-- {
-		strides[i] = strides[i+1] * int(interpolation.size[i+1])
+	strides := make([]int, len(interpolation.Size))
+	strides[len(interpolation.Size)-1] = 1
+	for i := len(interpolation.Size) - 2; i >= 0; i-- {
+		strides[i] = strides[i+1] * int(interpolation.Size[i+1])
 	}
 
 	for i := 0; i < numPixels; i++ {
-		point := make([]float64, len(interpolation.size))
+		point := make([]float64, len(interpolation.Size))
 		idx := i
-		for j := 0; j < len(interpolation.size); j++ {
-			point[j] = float64(idx/strides[j])*interpolation.spacing[j] + interpolation.origin[j]
+		for j := 0; j < len(interpolation.Size); j++ {
+			point[j] = float64(idx/strides[j])*interpolation.Spacing[j] + interpolation.Origin[j]
 			idx %= strides[j]
 		}
-		value, err := img.GetPixelFromPoint(point, interpolation.fillType)
+		value, err := img.GetPixelFromPoint(point, interpolation.FillType)
 		if err != nil {
 			return nil, err
 		}
@@ -63,9 +63,9 @@ func linearResample(img *Image, interpolation LinearInterpolation) (*Image, erro
 		if err != nil {
 			return nil, err
 		}
-		index := make([]uint32, len(interpolation.size))
+		index := make([]uint32, len(interpolation.Size))
 		idx = i
-		for j := 0; j < len(interpolation.size); j++ {
+		for j := 0; j < len(interpolation.Size); j++ {
 			index[j] = uint32(idx / strides[j])
 			idx %= strides[j]
 		}

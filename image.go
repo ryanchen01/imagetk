@@ -257,7 +257,7 @@ func (img *Image) GetPixel(index []uint32) (any, error) {
 		return nil, fmt.Errorf("invalid index length: %d", len(index))
 	}
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return nil, fmt.Errorf("index out of range: %d", index[i])
 		}
@@ -291,7 +291,7 @@ func (img *Image) GetPixel(index []uint32) (any, error) {
 
 func (img *Image) GetPixelAsUInt8(index []uint32) (uint8, error) {
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return 0, fmt.Errorf("index out of range: %d", index[i])
 		}
@@ -325,7 +325,7 @@ func (img *Image) GetPixelAsUInt8(index []uint32) (uint8, error) {
 
 func (img *Image) GetPixelAsInt8(index []uint32) (int8, error) {
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return 0, fmt.Errorf("index out of range: %d", index[i])
 		}
@@ -359,7 +359,7 @@ func (img *Image) GetPixelAsInt8(index []uint32) (int8, error) {
 
 func (img *Image) GetPixelAsUInt16(index []uint32) (uint16, error) {
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return 0, fmt.Errorf("index out of range: %d", index[i])
 		}
@@ -393,7 +393,7 @@ func (img *Image) GetPixelAsUInt16(index []uint32) (uint16, error) {
 
 func (img *Image) GetPixelAsInt16(index []uint32) (int16, error) {
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return 0, fmt.Errorf("index out of range: %d", index[i])
 		}
@@ -427,7 +427,7 @@ func (img *Image) GetPixelAsInt16(index []uint32) (int16, error) {
 
 func (img *Image) GetPixelAsUInt32(index []uint32) (uint32, error) {
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return 0, fmt.Errorf("index out of range: %d", index[i])
 		}
@@ -461,7 +461,7 @@ func (img *Image) GetPixelAsUInt32(index []uint32) (uint32, error) {
 
 func (img *Image) GetPixelAsInt32(index []uint32) (int32, error) {
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return 0, fmt.Errorf("index out of range: %d", index[i])
 		}
@@ -495,7 +495,7 @@ func (img *Image) GetPixelAsInt32(index []uint32) (int32, error) {
 
 func (img *Image) GetPixelAsUInt64(index []uint32) (uint64, error) {
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return 0, fmt.Errorf("index out of range: %d", index[i])
 		}
@@ -529,7 +529,7 @@ func (img *Image) GetPixelAsUInt64(index []uint32) (uint64, error) {
 
 func (img *Image) GetPixelAsInt64(index []uint32) (int64, error) {
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return 0, fmt.Errorf("index out of range: %d", index[i])
 		}
@@ -563,7 +563,7 @@ func (img *Image) GetPixelAsInt64(index []uint32) (int64, error) {
 
 func (img *Image) GetPixelAsFloat32(index []uint32) (float32, error) {
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return 0, fmt.Errorf("index out of range: %d", index[i])
 		}
@@ -597,7 +597,7 @@ func (img *Image) GetPixelAsFloat32(index []uint32) (float32, error) {
 
 func (img *Image) GetPixelAsFloat64(index []uint32) (float64, error) {
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return 0, fmt.Errorf("index out of range: %d", index[i])
 		}
@@ -955,7 +955,7 @@ func (img *Image) SetPixel(index []uint32, value any) error {
 		return fmt.Errorf("invalid index length: %d", len(index))
 	}
 	idx := uint32(0)
-	for i := 0; i < len(index); i++ {
+	for i := len(index) - 1; i >= 0; i-- {
 		if index[i] >= img.size[i] {
 			return fmt.Errorf("index out of range: %d", index[i])
 		}
