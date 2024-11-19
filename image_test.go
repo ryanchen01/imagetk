@@ -28,13 +28,13 @@ func TestImageCreation(t *testing.T) {
 		t.Errorf("Expected pixel type to be PixelTypeFloat32, got %v", img.GetPixelType())
 	}
 
-	arr := make([][][]float32, 10)
-	for i := 0; i < 10; i++ {
-		arr[i] = make([][]float32, 11)
-		for j := 0; j < 11; j++ {
-			arr[i][j] = make([]float32, 12)
-			for k := 0; k < 12; k++ {
-				arr[i][j][k] = float32(i*11*12 + j*12 + k)
+	arr := make([][][]float32, 12)
+	for z := 0; z < 12; z++ {
+		arr[z] = make([][]float32, 11)
+		for y := 0; y < 11; y++ {
+			arr[z][y] = make([]float32, 10)
+			for x := 0; x < 10; x++ {
+				arr[z][y][x] = float32(z*11*10 + y*10 + x)
 			}
 		}
 	}
@@ -62,16 +62,16 @@ func TestImageCreation(t *testing.T) {
 	}
 
 	// Check the pixel values
-	for i := 0; i < 10; i++ {
-		for j := 0; j < 11; j++ {
-			for k := 0; k < 12; k++ {
-				pixel, err := img.GetPixel([]uint32{uint32(i), uint32(j), uint32(k)})
+	for z := 0; z < 12; z++ {
+		for y := 0; y < 11; y++ {
+			for x := 0; x < 10; x++ {
+				pixel, err := img.GetPixel([]uint32{uint32(x), uint32(y), uint32(z)})
 				if err != nil {
 					t.Errorf("Error getting pixel: %v", err)
 				}
 
-				if pixel.(float32) != float32(i*11*12+j*12+k) {
-					t.Errorf("Expected pixel value to be %v, got %v", float32(i*11*12+j*12+k), pixel)
+				if pixel.(float32) != float32(z*11*10+y*10+x) {
+					t.Errorf("Expected pixel value to be %v, got %v", float32(z*11*10+y*10+x), pixel)
 				}
 			}
 		}

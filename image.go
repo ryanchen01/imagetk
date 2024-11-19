@@ -153,7 +153,7 @@ func NewImage(size []uint32, pixelType int) (*Image, error) {
 //
 // If the pixel type is not supported, the function returns an error.
 func GetImageFromArray(data any) (*Image, error) {
-	var size []uint32
+	var _size []uint32
 	value := reflect.ValueOf(data)
 
 	if value.Kind() != reflect.Slice && value.Kind() != reflect.Array {
@@ -162,11 +162,16 @@ func GetImageFromArray(data any) (*Image, error) {
 	pixelType := PixelTypeUnknown
 
 	for value.Kind() == reflect.Slice {
-		size = append(size, uint32(value.Len()))
+		_size = append(_size, uint32(value.Len()))
 		if value.Len() == 0 {
 			break
 		}
 		value = value.Index(0)
+	}
+
+	size := make([]uint32, len(_size))
+	for i := 0; i < len(_size); i++ {
+		size[i] = _size[len(_size)-1-i]
 	}
 
 	// Determine the pixel type based on the kind of the reflect value.
