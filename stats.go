@@ -1,6 +1,9 @@
 package imagetk
 
-import "math"
+import (
+	"math"
+	"sort"
+)
 
 func (img *Image) Min() any {
 	switch img.pixelType {
@@ -243,7 +246,7 @@ func (img *Image) Sum() any {
 	}
 }
 
-func (img *Image) ExactMean() any {
+func (img *Image) ExactMean() float64 {
 	switch img.pixelType {
 	case PixelTypeUInt8:
 		sumValue := uint64(0)
@@ -306,7 +309,7 @@ func (img *Image) ExactMean() any {
 		}
 		return sumValue / float64(len(img.pixels.([]float64)))
 	default:
-		return nil
+		return 0
 	}
 }
 
@@ -372,6 +375,160 @@ func (img *Image) Mean() any {
 			sumValue += value
 		}
 		return sumValue / float64(len(img.pixels.([]float64)))
+	default:
+		return nil
+	}
+}
+
+func (img *Image) Median() float64 {
+	switch img.pixelType {
+	case PixelTypeUInt8:
+		sort.Slice(img.pixels.([]uint8), func(i, j int) bool { return img.pixels.([]uint8)[i] < img.pixels.([]uint8)[j] })
+		if len(img.pixels.([]uint8))%2 == 0 {
+			return float64(img.pixels.([]uint8)[len(img.pixels.([]uint8))/2-1]+img.pixels.([]uint8)[len(img.pixels.([]uint8))/2]) / 2
+		}
+		return float64(img.pixels.([]uint8)[len(img.pixels.([]uint8))/2])
+	case PixelTypeInt8:
+		sort.Slice(img.pixels.([]int8), func(i, j int) bool { return img.pixels.([]int8)[i] < img.pixels.([]int8)[j] })
+		if len(img.pixels.([]int8))%2 == 0 {
+			return float64(img.pixels.([]int8)[len(img.pixels.([]int8))/2-1]+img.pixels.([]int8)[len(img.pixels.([]int8))/2]) / 2
+		}
+		return float64(img.pixels.([]int8)[len(img.pixels.([]int8))/2])
+	case PixelTypeUInt16:
+		sort.Slice(img.pixels.([]uint16), func(i, j int) bool { return img.pixels.([]uint16)[i] < img.pixels.([]uint16)[j] })
+		if len(img.pixels.([]uint16))%2 == 0 {
+			return float64(img.pixels.([]uint16)[len(img.pixels.([]uint16))/2-1]+img.pixels.([]uint16)[len(img.pixels.([]uint16))/2]) / 2
+		}
+		return float64(img.pixels.([]uint16)[len(img.pixels.([]uint16))/2])
+	case PixelTypeInt16:
+		sort.Slice(img.pixels.([]int16), func(i, j int) bool { return img.pixels.([]int16)[i] < img.pixels.([]int16)[j] })
+		if len(img.pixels.([]int16))%2 == 0 {
+			return float64(img.pixels.([]int16)[len(img.pixels.([]int16))/2-1]+img.pixels.([]int16)[len(img.pixels.([]int16))/2]) / 2
+		}
+		return float64(img.pixels.([]int16)[len(img.pixels.([]int16))/2])
+	case PixelTypeUInt32:
+		sort.Slice(img.pixels.([]uint32), func(i, j int) bool { return img.pixels.([]uint32)[i] < img.pixels.([]uint32)[j] })
+		if len(img.pixels.([]uint32))%2 == 0 {
+			return float64(img.pixels.([]uint32)[len(img.pixels.([]uint32))/2-1]+img.pixels.([]uint32)[len(img.pixels.([]uint32))/2]) / 2
+		}
+		return float64(img.pixels.([]uint32)[len(img.pixels.([]uint32))/2])
+	case PixelTypeInt32:
+		sort.Slice(img.pixels.([]int32), func(i, j int) bool { return img.pixels.([]int32)[i] < img.pixels.([]int32)[j] })
+		if len(img.pixels.([]int32))%2 == 0 {
+			return float64(img.pixels.([]int32)[len(img.pixels.([]int32))/2-1]+img.pixels.([]int32)[len(img.pixels.([]int32))/2]) / 2
+		}
+		return float64(img.pixels.([]int32)[len(img.pixels.([]int32))/2])
+	case PixelTypeUInt64:
+		sort.Slice(img.pixels.([]uint64), func(i, j int) bool { return img.pixels.([]uint64)[i] < img.pixels.([]uint64)[j] })
+		if len(img.pixels.([]uint64))%2 == 0 {
+			return float64(img.pixels.([]uint64)[len(img.pixels.([]uint64))/2-1]+img.pixels.([]uint64)[len(img.pixels.([]uint64))/2]) / 2
+		}
+		return float64(img.pixels.([]uint64)[len(img.pixels.([]uint64))/2])
+	case PixelTypeInt64:
+		sort.Slice(img.pixels.([]int64), func(i, j int) bool { return img.pixels.([]int64)[i] < img.pixels.([]int64)[j] })
+		if len(img.pixels.([]int64))%2 == 0 {
+			return float64(img.pixels.([]int64)[len(img.pixels.([]int64))/2-1]+img.pixels.([]int64)[len(img.pixels.([]int64))/2]) / 2
+		}
+		return float64(img.pixels.([]int64)[len(img.pixels.([]int64))/2])
+	case PixelTypeFloat32:
+		sort.Slice(img.pixels.([]float32), func(i, j int) bool { return img.pixels.([]float32)[i] < img.pixels.([]float32)[j] })
+		if len(img.pixels.([]float32))%2 == 0 {
+			return float64(img.pixels.([]float32)[len(img.pixels.([]float32))/2-1]+img.pixels.([]float32)[len(img.pixels.([]float32))/2]) / 2
+		}
+		return float64(img.pixels.([]float32)[len(img.pixels.([]float32))/2])
+	case PixelTypeFloat64:
+		sort.Slice(img.pixels.([]float64), func(i, j int) bool { return img.pixels.([]float64)[i] < img.pixels.([]float64)[j] })
+		if len(img.pixels.([]float64))%2 == 0 {
+			return (img.pixels.([]float64)[len(img.pixels.([]float64))/2-1] + img.pixels.([]float64)[len(img.pixels.([]float64))/2]) / 2
+		}
+		return float64(img.pixels.([]float64)[len(img.pixels.([]float64))/2])
+	default:
+		return 0
+	}
+}
+
+func (img *Image) Std() any {
+	switch img.pixelType {
+	case PixelTypeUInt8:
+		meanValue := img.ExactMean()
+		sumValue := 0.0
+		for _, v := range img.pixels.([]uint8) {
+			value := float64(v)
+			sumValue += (value - meanValue) * (value - meanValue)
+		}
+		return math.Sqrt(sumValue / float64(len(img.pixels.([]uint8))))
+	case PixelTypeInt8:
+		meanValue := img.ExactMean()
+		sumValue := 0.0
+		for _, v := range img.pixels.([]int8) {
+			value := float64(v)
+			sumValue += (value - meanValue) * (value - meanValue)
+		}
+		return math.Sqrt(sumValue / float64(len(img.pixels.([]int8))))
+	case PixelTypeUInt16:
+		meanValue := img.ExactMean()
+		sumValue := 0.0
+		for _, v := range img.pixels.([]uint16) {
+			value := float64(v)
+			sumValue += float64(value-meanValue) * float64(value-meanValue)
+		}
+		return math.Sqrt(float64(sumValue) / float64(len(img.pixels.([]uint16))))
+	case PixelTypeInt16:
+		meanValue := img.ExactMean()
+		sumValue := 0.0
+		for _, v := range img.pixels.([]int16) {
+			value := float64(v)
+			sumValue += float64(value-meanValue) * float64(value-meanValue)
+		}
+		return math.Sqrt(float64(sumValue) / float64(len(img.pixels.([]int16))))
+	case PixelTypeUInt32:
+		meanValue := img.ExactMean()
+		sumValue := 0.0
+		for _, v := range img.pixels.([]uint32) {
+			value := float64(v)
+			sumValue += (value - meanValue) * (value - meanValue)
+		}
+		return math.Sqrt(sumValue / float64(len(img.pixels.([]uint32))))
+	case PixelTypeInt32:
+		meanValue := img.ExactMean()
+		sumValue := 0.0
+		for _, v := range img.pixels.([]int32) {
+			value := float64(v)
+			sumValue += (value - meanValue) * (value - meanValue)
+		}
+		return math.Sqrt(sumValue / float64(len(img.pixels.([]int32))))
+	case PixelTypeUInt64:
+		meanValue := img.ExactMean()
+		sumValue := 0.0
+		for _, v := range img.pixels.([]uint64) {
+			value := float64(v)
+			sumValue += (value - meanValue) * (value - meanValue)
+		}
+		return math.Sqrt(sumValue / float64(len(img.pixels.([]uint64))))
+	case PixelTypeInt64:
+		meanValue := img.ExactMean()
+		sumValue := 0.0
+		for _, v := range img.pixels.([]int64) {
+			value := float64(v)
+			sumValue += (value - meanValue) * (value - meanValue)
+		}
+		return math.Sqrt(sumValue / float64(len(img.pixels.([]int64))))
+	case PixelTypeFloat32:
+		meanValue := img.ExactMean()
+		sumValue := 0.0
+		for _, v := range img.pixels.([]float32) {
+			value := float64(v)
+			sumValue += (value - meanValue) * (value - meanValue)
+		}
+		return math.Sqrt(sumValue / float64(len(img.pixels.([]float32))))
+	case PixelTypeFloat64:
+		meanValue := img.ExactMean()
+		sumValue := 0.0
+		for _, v := range img.pixels.([]float64) {
+			value := float64(v)
+			sumValue += (value - meanValue) * (value - meanValue)
+		}
+		return math.Sqrt(sumValue / float64(len(img.pixels.([]float64))))
 	default:
 		return nil
 	}
