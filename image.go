@@ -1142,3 +1142,39 @@ func (img *Image) SetPixels(pixels any) error {
 
 	return nil
 }
+
+func (img *Image) SetSize(size []uint32) error {
+	totalSize := uint32(1)
+	for _, s := range size {
+		totalSize *= s
+	}
+	var numPixels int
+	switch img.pixelType {
+	case PixelTypeUInt8:
+		numPixels = int(len(img.pixels.([]uint8)))
+	case PixelTypeInt8:
+		numPixels = int(len(img.pixels.([]int8)))
+	case PixelTypeUInt16:
+		numPixels = int(len(img.pixels.([]uint16)))
+	case PixelTypeInt16:
+		numPixels = int(len(img.pixels.([]int16)))
+	case PixelTypeUInt32:
+		numPixels = int(len(img.pixels.([]uint32)))
+	case PixelTypeInt32:
+		numPixels = int(len(img.pixels.([]int32)))
+	case PixelTypeUInt64:
+		numPixels = int(len(img.pixels.([]uint64)))
+	case PixelTypeInt64:
+		numPixels = int(len(img.pixels.([]int64)))
+	case PixelTypeFloat32:
+		numPixels = int(len(img.pixels.([]float32)))
+	case PixelTypeFloat64:
+		numPixels = int(len(img.pixels.([]float64)))
+	}
+	if uint32(numPixels) != totalSize {
+		return fmt.Errorf("invalid number of pixels, expected %d, got %d", totalSize, numPixels)
+	}
+	img.size = size
+	img.dimension = uint32(len(size))
+	return nil
+}

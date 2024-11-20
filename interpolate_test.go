@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestLinearInterpolation(t *testing.T) {
+func TestLinearInterpolator(t *testing.T) {
 	pixelData := [][]float32{
 		{0, 0, 0, 0},
 		{0, 0, 0, 0},
@@ -17,7 +17,7 @@ func TestLinearInterpolation(t *testing.T) {
 	}
 	img.SetOrigin([]float64{0.5, 0.5})
 
-	interpolator := LinearInterpolation{
+	interpolator := LinearInterpolator{
 		Size:      []uint32{8, 8},
 		Spacing:   []float64{0.5, 0.5},
 		Origin:    []float64{0.25, 0.25},
@@ -44,7 +44,7 @@ func TestLinearInterpolation(t *testing.T) {
 
 }
 
-func TestLinearInterpolation2(t *testing.T) {
+func TestLinearInterpolator2(t *testing.T) {
 	pixelData := [][]float32{
 		{0, 0, 0},
 		{0, 1, 0},
@@ -56,7 +56,7 @@ func TestLinearInterpolation2(t *testing.T) {
 	}
 	img.SetOrigin([]float64{0.5, 0.5})
 
-	interpolator := LinearInterpolation{
+	interpolator := LinearInterpolator{
 		Size:      []uint32{5, 5},
 		Spacing:   []float64{3.0 / 5.0, 3.0 / 5.0},
 		Origin:    []float64{3.0 / 5.0 / 2, 3.0 / 5.0 / 2},

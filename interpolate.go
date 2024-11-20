@@ -2,7 +2,7 @@ package imagetk
 
 import "fmt"
 
-type LinearInterpolation struct {
+type LinearInterpolator struct {
 	Size      []uint32
 	Spacing   []float64
 	Origin    []float64
@@ -15,46 +15,72 @@ const (
 	FillTypeNearest
 )
 
-func (img *Image) Resample(interpolation any) (*Image, error) {
-	switch interpolation := interpolation.(type) {
-	case LinearInterpolation:
-		return linearResample(img, interpolation)
+// Resample resamples the image using the specified interpolator.
+//
+// Parameters:
+//   - interpolator: Interpolator
+//
+// Returns:
+//   - *Image: The resampled image
+//   - error: Error if resampling fails
+func (img *Image) Resample(interpolator any) (*Image, error) {
+	switch interpolator := interpolator.(type) {
+	case LinearInterpolator:
+		return linearResample(img, interpolator)
 	default:
 		return nil, fmt.Errorf("unknown interpolation type")
 	}
 }
 
-func linearResample(img *Image, interpolation LinearInterpolation) (*Image, error) {
+func linearResample(img *Image, interpolator LinearInterpolator) (*Image, error) {
 	// Create a new image
-	newImg, err := NewImage(interpolation.Size, img.GetPixelType())
+	newImg, err := NewImage(interpolator.Size, img.GetPixelType())
 	if err != nil {
 		return nil, err
 	}
 
-	// Copy the origin, spacing and direction
-	newImg.SetOrigin(interpolation.Origin)
-	newImg.SetSpacing(interpolation.Spacing)
-	newImg.SetDirection(interpolation.Direction)
-
-	numPixels := 1
-	for i := 0; i < len(interpolation.Size); i++ {
-		numPixels *= int(interpolation.Size[i])
+	// Copy the origin, spacing and direction with default values if not specified
+	if interpolator.Origin != nil {
+		newImg.SetOrigin(interpolator.Origin)
+	} else {
+		return nil, fmt.Errorf("origin is not specified")
 	}
 
-	strides := make([]int, len(interpolation.Size))
-	strides[len(interpolation.Size)-1] = 1
-	for i := len(interpolation.Size) - 2; i >= 0; i-- {
-		strides[i] = strides[i+1] * int(interpolation.Size[i+1])
+	if interpolator.Spacing != nil {
+		newImg.SetSpacing(interpolator.Spacing)
+	} else {
+		return nil, fmt.Errorf("spacing is not specified")
+	}
+
+	if interpolator.Direction != [9]float64{} {
+		newImg.SetDirection(interpolator.Direction)
+	} else {
+		return nil, fmt.Errorf("direction is not specified")
+	}
+
+	if interpolator.Size == nil {
+		return nil, fmt.Errorf("size is not specified")
+	}
+
+	numPixels := 1
+	for i := 0; i < len(interpolator.Size); i++ {
+		numPixels *= int(interpolator.Size[i])
+	}
+
+	strides := make([]int, len(interpolator.Size))
+	strides[len(interpolator.Size)-1] = 1
+	for i := len(interpolator.Size) - 2; i >= 0; i-- {
+		strides[i] = strides[i+1] * int(interpolator.Size[i+1])
 	}
 
 	for i := 0; i < numPixels; i++ {
-		point := make([]float64, len(interpolation.Size))
+		point := make([]float64, len(interpolator.Size))
 		idx := i
-		for j := 0; j < len(interpolation.Size); j++ {
-			point[j] = float64(idx/strides[j])*interpolation.Spacing[j] + interpolation.Origin[j]
+		for j := 0; j < len(interpolator.Size); j++ {
+			point[j] = float64(idx/strides[j])*interpolator.Spacing[j] + interpolator.Origin[j]
 			idx %= strides[j]
 		}
-		value, err := img.GetPixelFromPoint(point, interpolation.FillType)
+		value, err := img.GetPixelFromPoint(point, interpolator.FillType)
 		if err != nil {
 			return nil, err
 		}
@@ -63,9 +89,9 @@ func linearResample(img *Image, interpolation LinearInterpolation) (*Image, erro
 		if err != nil {
 			return nil, err
 		}
-		index := make([]uint32, len(interpolation.Size))
+		index := make([]uint32, len(interpolator.Size))
 		idx = i
-		for j := 0; j < len(interpolation.Size); j++ {
+		for j := 0; j < len(interpolator.Size); j++ {
 			index[j] = uint32(idx / strides[j])
 			idx %= strides[j]
 		}
