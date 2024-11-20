@@ -5,27 +5,6 @@ import (
 	"reflect"
 )
 
-func flattenReflectValues(data any) []reflect.Value {
-	var flattenedValues []reflect.Value
-	var helper func(interface{})
-
-	helper = func(d interface{}) {
-		val := reflect.ValueOf(d)
-		switch val.Kind() {
-		case reflect.Slice:
-			for i := 0; i < val.Len(); i++ {
-				helper(val.Index(i).Interface())
-			}
-		default:
-			flattenedValues = append(flattenedValues, val)
-		}
-	}
-
-	helper(data)
-
-	return flattenedValues
-}
-
 func getValueAsPixelType(value any, pixelType int) (any, error) {
 	switch value := value.(type) {
 	case uint8:
@@ -306,4 +285,88 @@ func getValueAsPixelType(value any, pixelType int) (any, error) {
 	default:
 		return nil, fmt.Errorf("unsupported value type")
 	}
+}
+
+// buildNestedSlice constructs an n-dimensional nested slice from the flat data according to the shape.
+func buildNestedSlice(data []reflect.Value, shape []uint32, elemType reflect.Type) reflect.Value {
+	var index int
+
+	var build func(level int) reflect.Value
+	build = func(level int) reflect.Value {
+		if level == len(shape) {
+			if index >= len(data) {
+				panic("Insufficient data to fill the shape")
+			}
+			val := data[index]
+			index++
+			return val
+		}
+
+		// Create a slice for the current dimension.
+		size := shape[level]
+		sliceType := elemType
+		for i := len(shape) - level - 1; i >= 0; i-- {
+			sliceType = reflect.SliceOf(sliceType)
+		}
+		slice := reflect.MakeSlice(sliceType, int(size), int(size))
+
+		// Recursively build nested slices.
+		for i := 0; i < int(size); i++ {
+			slice.Index(i).Set(build(level + 1))
+		}
+		return slice
+	}
+
+	return build(0)
+}
+
+// flatten converts an n-dimensional nested slice into a flat slice of reflect.Values.
+// It also determines the element type of the innermost elements.
+func flatten(data interface{}, elemType *reflect.Type) []reflect.Value {
+	var flat []reflect.Value
+	var helper func(interface{})
+
+	helper = func(d interface{}) {
+		val := reflect.ValueOf(d)
+		switch val.Kind() {
+		case reflect.Slice:
+			for i := 0; i < val.Len(); i++ {
+				helper(val.Index(i).Interface())
+			}
+		default:
+			if *elemType == nil {
+				*elemType = val.Type()
+			}
+			flat = append(flat, val)
+		}
+	}
+
+	helper(data)
+	return flat
+}
+
+// Reshape reshapes an n-dimensional nested slice into the specified shape.
+func reshape(data interface{}, shape []uint32) any {
+	if data == nil {
+		return nil
+	}
+	// Flatten the input data and determine the element type.
+	var elemType reflect.Type
+	flatData := flatten(data, &elemType)
+
+	// Calculate the total number of elements required by the new shape.
+	totalSize := uint64(1)
+	for _, dim := range shape {
+		totalSize *= uint64(dim)
+	}
+
+	// Ensure the total number of elements matches.
+	if uint64(len(flatData)) != totalSize {
+		panic(fmt.Sprintf("Cannot reshape array of size %d into shape %v", len(flatData), shape))
+	}
+
+	// Build the reshaped nested slice.
+	reshaped := buildNestedSlice(flatData, shape, elemType)
+
+	return reshaped.Interface()
 }

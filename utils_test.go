@@ -24,7 +24,8 @@ func TestFlatten(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := flattenReflectValues(tt.input)
+			var elemType reflect.Type
+			result := flatten(tt.input, &elemType)
 			if !reflect.DeepEqual(extractValues(result), extractValues(tt.expect)) {
 				t.Errorf("Expected %v, got %v", extractValues(tt.expect), extractValues(result))
 			}

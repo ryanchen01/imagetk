@@ -116,4 +116,4 @@ For detailed implementation examples, please refer to the test files in the repo
 - [ ] Cubic interpolation
 - [ ] DICOM file format support
 - [ ] NRRD file format support
-- [ ] Dilate/Erode/Open/Close morphological operations
+- [x] Dilate/Erode/Open/Close morphological operations

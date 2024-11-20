@@ -174,6 +174,10 @@ func GetImageFromArray(data any) (*Image, error) {
 		size[i] = _size[len(_size)-1-i]
 	}
 
+	if len(size) < 2 || len(size) > 3 {
+		return nil, fmt.Errorf("invalid dimension: %d", len(size))
+	}
+
 	// Determine the pixel type based on the kind of the reflect value.
 	// This switch case maps the reflect.Kind to the corresponding PixelType constant.
 	switch value.Kind() {
@@ -212,6 +216,164 @@ func GetImageFromArray(data any) (*Image, error) {
 	}
 
 	return img, nil
+}
+
+func GetArrayFromImage(img *Image) (any, error) {
+	numPixels := img.NumPixels()
+	switch img.pixelType {
+	case PixelTypeUInt8:
+		data := make([]uint8, numPixels)
+		for i := uint64(0); i < numPixels; i++ {
+			index, err := img.GetIndexFromLinearIndex(i)
+			if err != nil {
+				return nil, err
+			}
+			value, err := img.GetPixelAsUInt8(index)
+			if err != nil {
+				return nil, err
+			}
+			data[i] = value
+		}
+		shapedData := reshape(data, img.size)
+		return shapedData, nil
+	case PixelTypeInt8:
+		data := make([]int8, numPixels)
+		for i := uint64(0); i < numPixels; i++ {
+			index, err := img.GetIndexFromLinearIndex(i)
+			if err != nil {
+				return nil, err
+			}
+			value, err := img.GetPixelAsInt8(index)
+			if err != nil {
+				return nil, err
+			}
+			data[i] = value
+		}
+		shapedData := reshape(data, img.size)
+		return shapedData, nil
+	case PixelTypeUInt16:
+		data := make([]uint16, numPixels)
+		for i := uint64(0); i < numPixels; i++ {
+			index, err := img.GetIndexFromLinearIndex(i)
+			if err != nil {
+				return nil, err
+			}
+			value, err := img.GetPixelAsUInt16(index)
+			if err != nil {
+				return nil, err
+			}
+			data[i] = value
+		}
+		shapedData := reshape(data, img.size)
+		return shapedData, nil
+	case PixelTypeInt16:
+		data := make([]int16, numPixels)
+		for i := uint64(0); i < numPixels; i++ {
+			index, err := img.GetIndexFromLinearIndex(i)
+			if err != nil {
+				return nil, err
+			}
+			value, err := img.GetPixelAsInt16(index)
+			if err != nil {
+				return nil, err
+			}
+			data[i] = value
+		}
+		shapedData := reshape(data, img.size)
+		return shapedData, nil
+	case PixelTypeUInt32:
+		data := make([]uint32, numPixels)
+		for i := uint64(0); i < numPixels; i++ {
+			index, err := img.GetIndexFromLinearIndex(i)
+			if err != nil {
+				return nil, err
+			}
+			value, err := img.GetPixelAsUInt32(index)
+			if err != nil {
+				return nil, err
+			}
+			data[i] = value
+		}
+		shapedData := reshape(data, img.size)
+		return shapedData, nil
+	case PixelTypeInt32:
+		data := make([]int32, numPixels)
+		for i := uint64(0); i < numPixels; i++ {
+			index, err := img.GetIndexFromLinearIndex(i)
+			if err != nil {
+				return nil, err
+			}
+			value, err := img.GetPixelAsInt32(index)
+			if err != nil {
+				return nil, err
+			}
+			data[i] = value
+		}
+		shapedData := reshape(data, img.size)
+		return shapedData, nil
+	case PixelTypeUInt64:
+		data := make([]uint64, numPixels)
+		for i := uint64(0); i < numPixels; i++ {
+			index, err := img.GetIndexFromLinearIndex(i)
+			if err != nil {
+				return nil, err
+			}
+			value, err := img.GetPixelAsUInt64(index)
+			if err != nil {
+				return nil, err
+			}
+			data[i] = value
+		}
+		shapedData := reshape(data, img.size)
+		return shapedData, nil
+	case PixelTypeInt64:
+		data := make([]int64, numPixels)
+		for i := uint64(0); i < numPixels; i++ {
+			index, err := img.GetIndexFromLinearIndex(i)
+			if err != nil {
+				return nil, err
+			}
+			value, err := img.GetPixelAsInt64(index)
+			if err != nil {
+				return nil, err
+			}
+			data[i] = value
+		}
+		shapedData := reshape(data, img.size)
+		return shapedData, nil
+	case PixelTypeFloat32:
+		data := make([]float32, numPixels)
+		for i := uint64(0); i < numPixels; i++ {
+			index, err := img.GetIndexFromLinearIndex(i)
+			if err != nil {
+				return nil, err
+			}
+			value, err := img.GetPixelAsFloat32(index)
+			if err != nil {
+				return nil, err
+			}
+			data[i] = value
+		}
+		shapedData := reshape(data, img.size)
+		return shapedData, nil
+	case PixelTypeFloat64:
+		data := make([]float64, numPixels)
+		for i := uint64(0); i < numPixels; i++ {
+			index, err := img.GetIndexFromLinearIndex(i)
+			if err != nil {
+				return nil, err
+			}
+			value, err := img.GetPixelAsFloat64(index)
+			if err != nil {
+				return nil, err
+			}
+			data[i] = value
+		}
+		shapedData := reshape(data, img.size)
+		return shapedData, nil
+	default:
+		return nil, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	}
 }
 
 // GetPixelType returns the pixel type of the image.
@@ -1034,7 +1196,8 @@ func (img *Image) SetPixel(index []uint32, value any) error {
 }
 
 func (img *Image) SetPixels(pixels any) error {
-	flattened := flattenReflectValues(pixels)
+	var elemType reflect.Type
+	flattened := flatten(pixels, &elemType)
 
 	numPixels := 1
 	for _, s := range img.size {
@@ -1177,4 +1340,43 @@ func (img *Image) SetSize(size []uint32) error {
 	img.size = size
 	img.dimension = uint32(len(size))
 	return nil
+}
+
+// GetIndexFromLinearIndex converts a linear index to multi-dimensional indices
+func (img *Image) GetIndexFromLinearIndex(linearIdx uint64) ([]uint32, error) {
+	if linearIdx >= img.NumPixels() {
+		return nil, fmt.Errorf("linear index out of range: %d", linearIdx)
+	}
+
+	indices := make([]uint32, img.dimension)
+	remaining := linearIdx
+
+	// Working backwards through dimensions
+	for i := 0; i < int(img.dimension); i++ {
+		// Calculate the size of the sub-array for the current dimension
+		subArraySize := uint64(1)
+		for j := 0; j < i; j++ {
+			subArraySize *= uint64(img.size[j])
+		}
+
+		// Calculate the index for this dimension
+		indices[i] = uint32((remaining / subArraySize) % uint64(img.size[i]))
+		remaining = remaining % subArraySize
+	}
+
+	// Reverse the indices array since the original indexing was in reverse order
+	for i := 0; i < len(indices)/2; i++ {
+		indices[i], indices[len(indices)-1-i] = indices[len(indices)-1-i], indices[i]
+	}
+
+	return indices, nil
+}
+
+// GetTotalPixels returns the total number of pixels in the image
+func (img *Image) NumPixels() uint64 {
+	total := uint64(1)
+	for _, size := range img.size {
+		total *= uint64(size)
+	}
+	return total
 }
