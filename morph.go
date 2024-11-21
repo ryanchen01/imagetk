@@ -1,6 +1,9 @@
 package imagetk
 
-import "sync"
+import (
+	"runtime"
+	"sync"
+)
 
 const (
 	MORPH_OPEN = iota
@@ -87,26 +90,38 @@ func binaryDilate3D(image *Image, kernelSize int) (*Image, error) {
 		}
 	}
 
+	numGoroutines := uint32(runtime.NumCPU())
+	chunkSize := size[2] / numGoroutines
+	if chunkSize*numGoroutines < size[2] {
+		chunkSize += 1
+	}
 	wg := sync.WaitGroup{}
-	for z := uint32(0); z < size[2]; z++ {
+	for chunk := uint32(0); chunk < numGoroutines; chunk++ {
+		start := chunk * chunkSize
+		end := start + chunkSize
+		if end > size[2] {
+			end = size[2]
+		}
 		wg.Add(1)
-		go func(z uint32) {
+		go func(start, end uint32) {
 			defer wg.Done()
-			for y := uint32(0); y < size[1]; y++ {
-				for x := uint32(0); x < size[0]; x++ {
-					// Check if the current pixel is set to 1
-					if int8Array[z][y][x] == 1 {
-						// Expand around the pixel, respecting boundaries
-						for i := -kernelSize / 2; i <= kernelSize/2; i++ {
-							for j := -kernelSize / 2; j <= kernelSize/2; j++ {
-								for k := -kernelSize / 2; k <= kernelSize/2; k++ {
-									newZ := int(z) + i
-									newY := int(y) + j
-									newX := int(x) + k
+			for z := start; z < end; z++ {
+				for y := uint32(0); y < size[1]; y++ {
+					for x := uint32(0); x < size[0]; x++ {
+						// Check if the current pixel is set to 1
+						if int8Array[z][y][x] == 1 {
+							// Expand around the pixel, respecting boundaries
+							for i := -kernelSize / 2; i <= kernelSize/2; i++ {
+								for j := -kernelSize / 2; j <= kernelSize/2; j++ {
+									for k := -kernelSize / 2; k <= kernelSize/2; k++ {
+										newZ := int(z) + i
+										newY := int(y) + j
+										newX := int(x) + k
 
-									// Ensure the new coordinates are within bounds
-									if newZ >= 0 && newZ < int(size[2]) && newY >= 0 && newY < int(size[1]) && newX >= 0 && newX < int(size[0]) {
-										expandedArray[newZ][newY][newX] = 1
+										// Ensure the new coordinates are within bounds
+										if newZ >= 0 && newZ < int(size[2]) && newY >= 0 && newY < int(size[1]) && newX >= 0 && newX < int(size[0]) {
+											expandedArray[newZ][newY][newX] = 1
+										}
 									}
 								}
 							}
@@ -114,7 +129,7 @@ func binaryDilate3D(image *Image, kernelSize int) (*Image, error) {
 					}
 				}
 			}
-		}(z)
+		}(start, end)
 	}
 	wg.Wait()
 
@@ -206,39 +221,51 @@ func binaryErode3D(image *Image, kernelSize int) (*Image, error) {
 
 	halfKernel := kernelSize / 2
 
+	numGoroutines := uint32(runtime.NumCPU())
+	chunkSize := size[2] / numGoroutines
+	if chunkSize*numGoroutines < size[2] {
+		chunkSize += 1
+	}
 	wg := sync.WaitGroup{}
-	for z := uint32(0); z < size[2]; z++ {
+	for chunk := uint32(0); chunk < numGoroutines; chunk++ {
+		start := chunk * chunkSize
+		end := start + chunkSize
+		if end > size[2] {
+			end = size[2]
+		}
 		wg.Add(1)
-		go func(z uint32) {
+		go func(start, end uint32) {
 			defer wg.Done()
-			for y := uint32(0); y < size[1]; y++ {
-				for x := uint32(0); x < size[0]; x++ {
-					// Only process pixels that are 1 in the input
-					if int8Array[z][y][x] == 1 {
-						// Check all pixels in the kernel neighborhood
-						for dz := -halfKernel; dz <= halfKernel; dz++ {
-							for dy := -halfKernel; dy <= halfKernel; dy++ {
-								for dx := -halfKernel; dx <= halfKernel; dx++ {
-									newZ := int(z) + dz
-									newY := int(y) + dy
-									newX := int(x) + dx
+			for z := start; z < end; z++ {
+				for y := uint32(0); y < size[1]; y++ {
+					for x := uint32(0); x < size[0]; x++ {
+						// Only process pixels that are 1 in the input
+						if int8Array[z][y][x] == 1 {
+							// Check all pixels in the kernel neighborhood
+							for dz := -halfKernel; dz <= halfKernel; dz++ {
+								for dy := -halfKernel; dy <= halfKernel; dy++ {
+									for dx := -halfKernel; dx <= halfKernel; dx++ {
+										newZ := int(z) + dz
+										newY := int(y) + dy
+										newX := int(x) + dx
 
-									// If any neighbor is outside bounds or 0, erode the current pixel
-									if newZ < 0 || newZ >= int(size[2]) ||
-										newY < 0 || newY >= int(size[1]) ||
-										newX < 0 || newX >= int(size[0]) ||
-										int8Array[newZ][newY][newX] == 0 {
-										erodedArray[z][y][x] = 0
-										goto nextPixel // Break out of all loops
+										// If any neighbor is outside bounds or 0, erode the current pixel
+										if newZ < 0 || newZ >= int(size[2]) ||
+											newY < 0 || newY >= int(size[1]) ||
+											newX < 0 || newX >= int(size[0]) ||
+											int8Array[newZ][newY][newX] == 0 {
+											erodedArray[z][y][x] = 0
+											goto nextPixel // Break out of all loops
+										}
 									}
 								}
 							}
 						}
+					nextPixel:
 					}
-				nextPixel:
 				}
 			}
-		}(z)
+		}(start, end)
 	}
 	wg.Wait()
 
