@@ -1,6 +1,10 @@
 package imagetk
 
-import "fmt"
+import (
+	"fmt"
+	"runtime"
+	"sync"
+)
 
 type LinearInterpolator struct {
 	Size      []uint32
@@ -73,33 +77,54 @@ func linearResample(img *Image, interpolator LinearInterpolator) (*Image, error)
 		strides[i] = strides[i+1] * int(interpolator.Size[i+1])
 	}
 
-	for i := 0; i < numPixels; i++ {
-		point := make([]float64, len(interpolator.Size))
-		idx := i
-		for j := 0; j < len(interpolator.Size); j++ {
-			point[j] = float64(idx/strides[j])*interpolator.Spacing[j] + interpolator.Origin[j]
-			idx %= strides[j]
-		}
-		value, err := img.GetPixelFromPoint(point, interpolator.FillType)
-		if err != nil {
-			return nil, err
-		}
-
-		pixelValue, err := getValueAsPixelType(value, newImg.pixelType)
-		if err != nil {
-			return nil, err
-		}
-		index := make([]uint32, len(interpolator.Size))
-		idx = i
-		for j := 0; j < len(interpolator.Size); j++ {
-			index[j] = uint32(idx / strides[j])
-			idx %= strides[j]
-		}
-		err = newImg.SetPixel(index, pixelValue)
-		if err != nil {
-			return nil, err
+	numGoroutines := uint32(runtime.NumCPU())
+	chunkSize := uint32(numPixels) / numGoroutines
+	if chunkSize*numGoroutines < uint32(numPixels) {
+		chunkSize += 1
+		if numGoroutines > uint32(numPixels) {
+			numGoroutines = uint32(numPixels)
 		}
 	}
+	wg := sync.WaitGroup{}
+	for chunk := uint32(0); chunk < numGoroutines; chunk++ {
+		start := chunk * chunkSize
+		end := start + chunkSize
+		if end > uint32(numPixels) {
+			end = uint32(numPixels)
+		}
+		wg.Add(1)
+		go func(start, end uint32) {
+			defer wg.Done()
+			for i := start; i < end; i++ {
+				point := make([]float64, len(interpolator.Size))
+				idx := i
+				for j := 0; j < len(interpolator.Size); j++ {
+					point[j] = float64(idx/uint32(strides[j]))*interpolator.Spacing[j] + interpolator.Origin[j]
+					idx %= uint32(strides[j])
+				}
+				value, err := img.GetPixelFromPoint(point, interpolator.FillType)
+				if err != nil {
+					return
+				}
+
+				pixelValue, err := getValueAsPixelType(value, newImg.pixelType)
+				if err != nil {
+					return
+				}
+				index := make([]uint32, len(interpolator.Size))
+				idx = i
+				for j := 0; j < len(interpolator.Size); j++ {
+					index[j] = uint32(idx / uint32(strides[j]))
+					idx %= uint32(strides[j])
+				}
+				err = newImg.SetPixel(index, pixelValue)
+				if err != nil {
+					return
+				}
+			}
+		}(start, end)
+	}
+	wg.Wait()
 
 	return newImg, nil
 }

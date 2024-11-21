@@ -3,6 +3,8 @@ package imagetk
 import (
 	"fmt"
 	"reflect"
+	"runtime"
+	"sync"
 )
 
 const (
@@ -219,156 +221,284 @@ func GetImageFromArray(data any) (*Image, error) {
 }
 
 func GetArrayFromImage(img *Image) (any, error) {
-	numPixels := img.NumPixels()
+	numGoroutines := uint64(runtime.NumCPU())
+	chunkSize := uint64(img.NumPixels()) / numGoroutines
+	if chunkSize*numGoroutines < uint64(img.NumPixels()) {
+		chunkSize += 1
+		if numGoroutines > uint64(img.NumPixels()) {
+			numGoroutines = uint64(img.NumPixels())
+		}
+	}
+	wg := sync.WaitGroup{}
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		data := make([]uint8, numPixels)
-		for i := uint64(0); i < numPixels; i++ {
-			index, err := img.GetIndexFromLinearIndex(i)
-			if err != nil {
-				return nil, err
+		data := make([]uint8, img.NumPixels())
+		for chunk := uint64(0); chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > img.NumPixels() {
+				end = img.NumPixels()
 			}
-			value, err := img.GetPixelAsUInt8(index)
-			if err != nil {
-				return nil, err
-			}
-			data[i] = value
+			wg.Add(1)
+			go func(start, end uint64) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					index, err := img.GetIndexFromLinearIndex(i)
+					if err != nil {
+						return
+					}
+					value, err := img.GetPixelAsUInt8(index)
+					if err != nil {
+						return
+					}
+					data[i] = value
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		shapedData := reshape(data, img.size)
 		return shapedData, nil
 	case PixelTypeInt8:
-		data := make([]int8, numPixels)
-		for i := uint64(0); i < numPixels; i++ {
-			index, err := img.GetIndexFromLinearIndex(i)
-			if err != nil {
-				return nil, err
+		data := make([]int8, img.NumPixels())
+		for chunk := uint64(0); chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > img.NumPixels() {
+				end = img.NumPixels()
 			}
-			value, err := img.GetPixelAsInt8(index)
-			if err != nil {
-				return nil, err
-			}
-			data[i] = value
+			wg.Add(1)
+			go func(start, end uint64) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					index, err := img.GetIndexFromLinearIndex(i)
+					if err != nil {
+						return
+					}
+					value, err := img.GetPixelAsInt8(index)
+					if err != nil {
+						return
+					}
+					data[i] = value
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		shapedData := reshape(data, img.size)
 		return shapedData, nil
 	case PixelTypeUInt16:
-		data := make([]uint16, numPixels)
-		for i := uint64(0); i < numPixels; i++ {
-			index, err := img.GetIndexFromLinearIndex(i)
-			if err != nil {
-				return nil, err
+		data := make([]uint16, img.NumPixels())
+		for chunk := uint64(0); chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > img.NumPixels() {
+				end = img.NumPixels()
 			}
-			value, err := img.GetPixelAsUInt16(index)
-			if err != nil {
-				return nil, err
-			}
-			data[i] = value
+			wg.Add(1)
+			go func(start, end uint64) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					index, err := img.GetIndexFromLinearIndex(i)
+					if err != nil {
+						return
+					}
+					value, err := img.GetPixelAsUInt16(index)
+					if err != nil {
+						return
+					}
+					data[i] = value
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		shapedData := reshape(data, img.size)
 		return shapedData, nil
 	case PixelTypeInt16:
-		data := make([]int16, numPixels)
-		for i := uint64(0); i < numPixels; i++ {
-			index, err := img.GetIndexFromLinearIndex(i)
-			if err != nil {
-				return nil, err
+		data := make([]int16, img.NumPixels())
+		for chunk := uint64(0); chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > img.NumPixels() {
+				end = img.NumPixels()
 			}
-			value, err := img.GetPixelAsInt16(index)
-			if err != nil {
-				return nil, err
-			}
-			data[i] = value
+			wg.Add(1)
+			go func(start, end uint64) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					index, err := img.GetIndexFromLinearIndex(i)
+					if err != nil {
+						return
+					}
+					value, err := img.GetPixelAsInt16(index)
+					if err != nil {
+						return
+					}
+					data[i] = value
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		shapedData := reshape(data, img.size)
 		return shapedData, nil
 	case PixelTypeUInt32:
-		data := make([]uint32, numPixels)
-		for i := uint64(0); i < numPixels; i++ {
-			index, err := img.GetIndexFromLinearIndex(i)
-			if err != nil {
-				return nil, err
+		data := make([]uint32, img.NumPixels())
+		for chunk := uint64(0); chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > img.NumPixels() {
+				end = img.NumPixels()
 			}
-			value, err := img.GetPixelAsUInt32(index)
-			if err != nil {
-				return nil, err
-			}
-			data[i] = value
+			wg.Add(1)
+			go func(start, end uint64) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					index, err := img.GetIndexFromLinearIndex(i)
+					if err != nil {
+						return
+					}
+					value, err := img.GetPixelAsUInt32(index)
+					if err != nil {
+						return
+					}
+					data[i] = value
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		shapedData := reshape(data, img.size)
 		return shapedData, nil
 	case PixelTypeInt32:
-		data := make([]int32, numPixels)
-		for i := uint64(0); i < numPixels; i++ {
-			index, err := img.GetIndexFromLinearIndex(i)
-			if err != nil {
-				return nil, err
+		data := make([]int32, img.NumPixels())
+		for chunk := uint64(0); chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > img.NumPixels() {
+				end = img.NumPixels()
 			}
-			value, err := img.GetPixelAsInt32(index)
-			if err != nil {
-				return nil, err
-			}
-			data[i] = value
+			wg.Add(1)
+			go func(start, end uint64) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					index, err := img.GetIndexFromLinearIndex(i)
+					if err != nil {
+						return
+					}
+					value, err := img.GetPixelAsInt32(index)
+					if err != nil {
+						return
+					}
+					data[i] = value
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		shapedData := reshape(data, img.size)
 		return shapedData, nil
 	case PixelTypeUInt64:
-		data := make([]uint64, numPixels)
-		for i := uint64(0); i < numPixels; i++ {
-			index, err := img.GetIndexFromLinearIndex(i)
-			if err != nil {
-				return nil, err
+		data := make([]uint64, img.NumPixels())
+		for chunk := uint64(0); chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > img.NumPixels() {
+				end = img.NumPixels()
 			}
-			value, err := img.GetPixelAsUInt64(index)
-			if err != nil {
-				return nil, err
-			}
-			data[i] = value
+			wg.Add(1)
+			go func(start, end uint64) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					index, err := img.GetIndexFromLinearIndex(i)
+					if err != nil {
+						return
+					}
+					value, err := img.GetPixelAsUInt64(index)
+					if err != nil {
+						return
+					}
+					data[i] = value
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		shapedData := reshape(data, img.size)
 		return shapedData, nil
 	case PixelTypeInt64:
-		data := make([]int64, numPixels)
-		for i := uint64(0); i < numPixels; i++ {
-			index, err := img.GetIndexFromLinearIndex(i)
-			if err != nil {
-				return nil, err
+		data := make([]int64, img.NumPixels())
+		for chunk := uint64(0); chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > img.NumPixels() {
+				end = img.NumPixels()
 			}
-			value, err := img.GetPixelAsInt64(index)
-			if err != nil {
-				return nil, err
-			}
-			data[i] = value
+			wg.Add(1)
+			go func(start, end uint64) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					index, err := img.GetIndexFromLinearIndex(i)
+					if err != nil {
+						return
+					}
+					value, err := img.GetPixelAsInt64(index)
+					if err != nil {
+						return
+					}
+					data[i] = value
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		shapedData := reshape(data, img.size)
 		return shapedData, nil
 	case PixelTypeFloat32:
-		data := make([]float32, numPixels)
-		for i := uint64(0); i < numPixels; i++ {
-			index, err := img.GetIndexFromLinearIndex(i)
-			if err != nil {
-				return nil, err
+		data := make([]float32, img.NumPixels())
+		for chunk := uint64(0); chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > img.NumPixels() {
+				end = img.NumPixels()
 			}
-			value, err := img.GetPixelAsFloat32(index)
-			if err != nil {
-				return nil, err
-			}
-			data[i] = value
+			wg.Add(1)
+			go func(start, end uint64) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					index, err := img.GetIndexFromLinearIndex(i)
+					if err != nil {
+						return
+					}
+					value, err := img.GetPixelAsFloat32(index)
+					if err != nil {
+						return
+					}
+					data[i] = value
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		shapedData := reshape(data, img.size)
 		return shapedData, nil
 	case PixelTypeFloat64:
-		data := make([]float64, numPixels)
-		for i := uint64(0); i < numPixels; i++ {
-			index, err := img.GetIndexFromLinearIndex(i)
-			if err != nil {
-				return nil, err
+		data := make([]float64, img.NumPixels())
+		for chunk := uint64(0); chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > img.NumPixels() {
+				end = img.NumPixels()
 			}
-			value, err := img.GetPixelAsFloat64(index)
-			if err != nil {
-				return nil, err
-			}
-			data[i] = value
+			wg.Add(1)
+			go func(start, end uint64) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					index, err := img.GetIndexFromLinearIndex(i)
+					if err != nil {
+						return
+					}
+					value, err := img.GetPixelAsFloat64(index)
+					if err != nil {
+						return
+					}
+					data[i] = value
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		shapedData := reshape(data, img.size)
 		return shapedData, nil
 	default:
@@ -839,256 +969,385 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 		numPixels *= int(s)
 	}
 
+	numGoroutines := runtime.NumCPU()
+	chunkSize := numPixels / numGoroutines
+	if chunkSize*numGoroutines < numPixels {
+		chunkSize += 1
+		if numGoroutines > numPixels {
+			numGoroutines = numPixels
+		}
+	}
+	wg := sync.WaitGroup{}
 	switch pixelType {
 	case PixelTypeUInt8:
 		newPixelData := make([]uint8, numPixels)
-		for i := 0; i < numPixels; i++ {
-			switch img.pixelType {
-			case PixelTypeInt8:
-				newPixelData[i] = uint8(img.pixels.([]int8)[i])
-			case PixelTypeUInt16:
-				newPixelData[i] = uint8(img.pixels.([]uint16)[i])
-			case PixelTypeInt16:
-				newPixelData[i] = uint8(img.pixels.([]int16)[i])
-			case PixelTypeUInt32:
-				newPixelData[i] = uint8(img.pixels.([]uint32)[i])
-			case PixelTypeInt32:
-				newPixelData[i] = uint8(img.pixels.([]int32)[i])
-			case PixelTypeUInt64:
-				newPixelData[i] = uint8(img.pixels.([]uint64)[i])
-			case PixelTypeInt64:
-				newPixelData[i] = uint8(img.pixels.([]int64)[i])
-			case PixelTypeFloat32:
-				newPixelData[i] = uint8(img.pixels.([]float32)[i])
-			case PixelTypeFloat64:
-				newPixelData[i] = uint8(img.pixels.([]float64)[i])
+		for chunk := 0; chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > numPixels {
+				end = numPixels
 			}
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					switch img.pixelType {
+					case PixelTypeInt8:
+						newPixelData[i] = uint8(img.pixels.([]int8)[i])
+					case PixelTypeUInt16:
+						newPixelData[i] = uint8(img.pixels.([]uint16)[i])
+					case PixelTypeInt16:
+						newPixelData[i] = uint8(img.pixels.([]int16)[i])
+					case PixelTypeUInt32:
+						newPixelData[i] = uint8(img.pixels.([]uint32)[i])
+					case PixelTypeInt32:
+						newPixelData[i] = uint8(img.pixels.([]int32)[i])
+					case PixelTypeUInt64:
+						newPixelData[i] = uint8(img.pixels.([]uint64)[i])
+					case PixelTypeInt64:
+						newPixelData[i] = uint8(img.pixels.([]int64)[i])
+					case PixelTypeFloat32:
+						newPixelData[i] = uint8(img.pixels.([]float32)[i])
+					case PixelTypeFloat64:
+						newPixelData[i] = uint8(img.pixels.([]float64)[i])
+					}
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeInt8:
 		newPixelData := make([]int8, numPixels)
-		for i := 0; i < numPixels; i++ {
-			switch img.pixelType {
-			case PixelTypeUInt8:
-				newPixelData[i] = int8(img.pixels.([]uint8)[i])
-			case PixelTypeUInt16:
-				newPixelData[i] = int8(img.pixels.([]uint16)[i])
-			case PixelTypeInt16:
-				newPixelData[i] = int8(img.pixels.([]int16)[i])
-			case PixelTypeUInt32:
-				newPixelData[i] = int8(img.pixels.([]uint32)[i])
-			case PixelTypeInt32:
-				newPixelData[i] = int8(img.pixels.([]int32)[i])
-			case PixelTypeUInt64:
-				newPixelData[i] = int8(img.pixels.([]uint64)[i])
-			case PixelTypeInt64:
-				newPixelData[i] = int8(img.pixels.([]int64)[i])
-			case PixelTypeFloat32:
-				newPixelData[i] = int8(img.pixels.([]float32)[i])
-			case PixelTypeFloat64:
-				newPixelData[i] = int8(img.pixels.([]float64)[i])
+		for chunk := 0; chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > numPixels {
+				end = numPixels
 			}
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					switch img.pixelType {
+					case PixelTypeUInt8:
+						newPixelData[i] = int8(img.pixels.([]uint8)[i])
+					case PixelTypeUInt16:
+						newPixelData[i] = int8(img.pixels.([]uint16)[i])
+					case PixelTypeInt16:
+						newPixelData[i] = int8(img.pixels.([]int16)[i])
+					case PixelTypeUInt32:
+						newPixelData[i] = int8(img.pixels.([]uint32)[i])
+					case PixelTypeInt32:
+						newPixelData[i] = int8(img.pixels.([]int32)[i])
+					case PixelTypeUInt64:
+						newPixelData[i] = int8(img.pixels.([]uint64)[i])
+					case PixelTypeInt64:
+						newPixelData[i] = int8(img.pixels.([]int64)[i])
+					case PixelTypeFloat32:
+						newPixelData[i] = int8(img.pixels.([]float32)[i])
+					case PixelTypeFloat64:
+						newPixelData[i] = int8(img.pixels.([]float64)[i])
+					}
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeUInt16:
 		newPixelData := make([]uint16, numPixels)
-		for i := 0; i < numPixels; i++ {
-			switch img.pixelType {
-			case PixelTypeUInt8:
-				newPixelData[i] = uint16(img.pixels.([]uint8)[i])
-			case PixelTypeInt8:
-				newPixelData[i] = uint16(img.pixels.([]int8)[i])
-			case PixelTypeInt16:
-				newPixelData[i] = uint16(img.pixels.([]int16)[i])
-			case PixelTypeUInt32:
-				newPixelData[i] = uint16(img.pixels.([]uint32)[i])
-			case PixelTypeInt32:
-				newPixelData[i] = uint16(img.pixels.([]int32)[i])
-			case PixelTypeUInt64:
-				newPixelData[i] = uint16(img.pixels.([]uint64)[i])
-			case PixelTypeInt64:
-				newPixelData[i] = uint16(img.pixels.([]int64)[i])
-			case PixelTypeFloat32:
-				newPixelData[i] = uint16(img.pixels.([]float32)[i])
-			case PixelTypeFloat64:
-				newPixelData[i] = uint16(img.pixels.([]float64)[i])
+		for chunk := 0; chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > numPixels {
+				end = numPixels
 			}
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					switch img.pixelType {
+					case PixelTypeUInt8:
+						newPixelData[i] = uint16(img.pixels.([]uint8)[i])
+					case PixelTypeInt8:
+						newPixelData[i] = uint16(img.pixels.([]int8)[i])
+					case PixelTypeInt16:
+						newPixelData[i] = uint16(img.pixels.([]int16)[i])
+					case PixelTypeUInt32:
+						newPixelData[i] = uint16(img.pixels.([]uint32)[i])
+					case PixelTypeInt32:
+						newPixelData[i] = uint16(img.pixels.([]int32)[i])
+					case PixelTypeUInt64:
+						newPixelData[i] = uint16(img.pixels.([]uint64)[i])
+					case PixelTypeInt64:
+						newPixelData[i] = uint16(img.pixels.([]int64)[i])
+					case PixelTypeFloat32:
+						newPixelData[i] = uint16(img.pixels.([]float32)[i])
+					case PixelTypeFloat64:
+						newPixelData[i] = uint16(img.pixels.([]float64)[i])
+					}
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeInt16:
 		newPixelData := make([]int16, numPixels)
-		for i := 0; i < numPixels; i++ {
-			switch img.pixelType {
-			case PixelTypeUInt8:
-				newPixelData[i] = int16(img.pixels.([]uint8)[i])
-			case PixelTypeInt8:
-				newPixelData[i] = int16(img.pixels.([]int8)[i])
-			case PixelTypeUInt16:
-				newPixelData[i] = int16(img.pixels.([]uint16)[i])
-			case PixelTypeUInt32:
-				newPixelData[i] = int16(img.pixels.([]uint32)[i])
-			case PixelTypeInt32:
-				newPixelData[i] = int16(img.pixels.([]int32)[i])
-			case PixelTypeUInt64:
-				newPixelData[i] = int16(img.pixels.([]uint64)[i])
-			case PixelTypeInt64:
-				newPixelData[i] = int16(img.pixels.([]int64)[i])
-			case PixelTypeFloat32:
-				newPixelData[i] = int16(img.pixels.([]float32)[i])
-			case PixelTypeFloat64:
-				newPixelData[i] = int16(img.pixels.([]float64)[i])
+		for chunk := 0; chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > numPixels {
+				end = numPixels
 			}
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					switch img.pixelType {
+					case PixelTypeUInt8:
+						newPixelData[i] = int16(img.pixels.([]uint8)[i])
+					case PixelTypeInt8:
+						newPixelData[i] = int16(img.pixels.([]int8)[i])
+					case PixelTypeUInt16:
+						newPixelData[i] = int16(img.pixels.([]uint16)[i])
+					case PixelTypeUInt32:
+						newPixelData[i] = int16(img.pixels.([]uint32)[i])
+					case PixelTypeInt32:
+						newPixelData[i] = int16(img.pixels.([]int32)[i])
+					case PixelTypeUInt64:
+						newPixelData[i] = int16(img.pixels.([]uint64)[i])
+					case PixelTypeInt64:
+						newPixelData[i] = int16(img.pixels.([]int64)[i])
+					case PixelTypeFloat32:
+						newPixelData[i] = int16(img.pixels.([]float32)[i])
+					case PixelTypeFloat64:
+						newPixelData[i] = int16(img.pixels.([]float64)[i])
+					}
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeUInt32:
 		newPixelData := make([]uint32, numPixels)
-		for i := 0; i < numPixels; i++ {
-			switch img.pixelType {
-			case PixelTypeUInt8:
-				newPixelData[i] = uint32(img.pixels.([]uint8)[i])
-			case PixelTypeInt8:
-				newPixelData[i] = uint32(img.pixels.([]int8)[i])
-			case PixelTypeUInt16:
-				newPixelData[i] = uint32(img.pixels.([]uint16)[i])
-			case PixelTypeInt16:
-				newPixelData[i] = uint32(img.pixels.([]int16)[i])
-			case PixelTypeInt32:
-				newPixelData[i] = uint32(img.pixels.([]int32)[i])
-			case PixelTypeUInt64:
-				newPixelData[i] = uint32(img.pixels.([]uint64)[i])
-			case PixelTypeInt64:
-				newPixelData[i] = uint32(img.pixels.([]int64)[i])
-			case PixelTypeFloat32:
-				newPixelData[i] = uint32(img.pixels.([]float32)[i])
-			case PixelTypeFloat64:
-				newPixelData[i] = uint32(img.pixels.([]float64)[i])
+		for chunk := 0; chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > numPixels {
+				end = numPixels
 			}
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					switch img.pixelType {
+					case PixelTypeUInt8:
+						newPixelData[i] = uint32(img.pixels.([]uint8)[i])
+					case PixelTypeInt8:
+						newPixelData[i] = uint32(img.pixels.([]int8)[i])
+					case PixelTypeUInt16:
+						newPixelData[i] = uint32(img.pixels.([]uint16)[i])
+					case PixelTypeInt16:
+						newPixelData[i] = uint32(img.pixels.([]int16)[i])
+					case PixelTypeInt32:
+						newPixelData[i] = uint32(img.pixels.([]int32)[i])
+					case PixelTypeUInt64:
+						newPixelData[i] = uint32(img.pixels.([]uint64)[i])
+					case PixelTypeInt64:
+						newPixelData[i] = uint32(img.pixels.([]int64)[i])
+					case PixelTypeFloat32:
+						newPixelData[i] = uint32(img.pixels.([]float32)[i])
+					case PixelTypeFloat64:
+						newPixelData[i] = uint32(img.pixels.([]float64)[i])
+					}
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeInt32:
 		newPixelData := make([]int32, numPixels)
-		for i := 0; i < numPixels; i++ {
-			switch img.pixelType {
-			case PixelTypeUInt8:
-				newPixelData[i] = int32(img.pixels.([]uint8)[i])
-			case PixelTypeInt8:
-				newPixelData[i] = int32(img.pixels.([]int8)[i])
-			case PixelTypeUInt16:
-				newPixelData[i] = int32(img.pixels.([]uint16)[i])
-			case PixelTypeInt16:
-				newPixelData[i] = int32(img.pixels.([]int16)[i])
-			case PixelTypeUInt32:
-				newPixelData[i] = int32(img.pixels.([]uint32)[i])
-			case PixelTypeUInt64:
-				newPixelData[i] = int32(img.pixels.([]uint64)[i])
-			case PixelTypeInt64:
-				newPixelData[i] = int32(img.pixels.([]int64)[i])
-			case PixelTypeFloat32:
-				newPixelData[i] = int32(img.pixels.([]float32)[i])
-			case PixelTypeFloat64:
-				newPixelData[i] = int32(img.pixels.([]float64)[i])
+		for chunk := 0; chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > numPixels {
+				end = numPixels
 			}
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					switch img.pixelType {
+					case PixelTypeUInt8:
+						newPixelData[i] = int32(img.pixels.([]uint8)[i])
+					case PixelTypeInt8:
+						newPixelData[i] = int32(img.pixels.([]int8)[i])
+					case PixelTypeUInt16:
+						newPixelData[i] = int32(img.pixels.([]uint16)[i])
+					case PixelTypeInt16:
+						newPixelData[i] = int32(img.pixels.([]int16)[i])
+					case PixelTypeUInt32:
+						newPixelData[i] = int32(img.pixels.([]uint32)[i])
+					case PixelTypeUInt64:
+						newPixelData[i] = int32(img.pixels.([]uint64)[i])
+					case PixelTypeInt64:
+						newPixelData[i] = int32(img.pixels.([]int64)[i])
+					case PixelTypeFloat32:
+						newPixelData[i] = int32(img.pixels.([]float32)[i])
+					case PixelTypeFloat64:
+						newPixelData[i] = int32(img.pixels.([]float64)[i])
+					}
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeUInt64:
 		newPixelData := make([]uint64, numPixels)
-		for i := 0; i < numPixels; i++ {
-			switch img.pixelType {
-			case PixelTypeUInt8:
-				newPixelData[i] = uint64(img.pixels.([]uint8)[i])
-			case PixelTypeInt8:
-				newPixelData[i] = uint64(img.pixels.([]int8)[i])
-			case PixelTypeUInt16:
-				newPixelData[i] = uint64(img.pixels.([]uint16)[i])
-			case PixelTypeInt16:
-				newPixelData[i] = uint64(img.pixels.([]int16)[i])
-			case PixelTypeUInt32:
-				newPixelData[i] = uint64(img.pixels.([]uint32)[i])
-			case PixelTypeInt32:
-				newPixelData[i] = uint64(img.pixels.([]int32)[i])
-			case PixelTypeInt64:
-				newPixelData[i] = uint64(img.pixels.([]int64)[i])
-			case PixelTypeFloat32:
-				newPixelData[i] = uint64(img.pixels.([]float32)[i])
-			case PixelTypeFloat64:
-				newPixelData[i] = uint64(img.pixels.([]float64)[i])
+		for chunk := 0; chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > numPixels {
+				end = numPixels
 			}
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					switch img.pixelType {
+					case PixelTypeUInt8:
+						newPixelData[i] = uint64(img.pixels.([]uint8)[i])
+					case PixelTypeInt8:
+						newPixelData[i] = uint64(img.pixels.([]int8)[i])
+					case PixelTypeUInt16:
+						newPixelData[i] = uint64(img.pixels.([]uint16)[i])
+					case PixelTypeInt16:
+						newPixelData[i] = uint64(img.pixels.([]int16)[i])
+					case PixelTypeUInt32:
+						newPixelData[i] = uint64(img.pixels.([]uint32)[i])
+					case PixelTypeInt32:
+						newPixelData[i] = uint64(img.pixels.([]int32)[i])
+					case PixelTypeInt64:
+						newPixelData[i] = uint64(img.pixels.([]int64)[i])
+					case PixelTypeFloat32:
+						newPixelData[i] = uint64(img.pixels.([]float32)[i])
+					case PixelTypeFloat64:
+						newPixelData[i] = uint64(img.pixels.([]float64)[i])
+					}
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeInt64:
 		newPixelData := make([]int64, numPixels)
-		for i := 0; i < numPixels; i++ {
-			switch img.pixelType {
-			case PixelTypeUInt8:
-				newPixelData[i] = int64(img.pixels.([]uint8)[i])
-			case PixelTypeInt8:
-				newPixelData[i] = int64(img.pixels.([]int8)[i])
-			case PixelTypeUInt16:
-				newPixelData[i] = int64(img.pixels.([]uint16)[i])
-			case PixelTypeInt16:
-				newPixelData[i] = int64(img.pixels.([]int16)[i])
-			case PixelTypeUInt32:
-				newPixelData[i] = int64(img.pixels.([]uint32)[i])
-			case PixelTypeInt32:
-				newPixelData[i] = int64(img.pixels.([]int32)[i])
-			case PixelTypeUInt64:
-				newPixelData[i] = int64(img.pixels.([]uint64)[i])
-			case PixelTypeFloat32:
-				newPixelData[i] = int64(img.pixels.([]float32)[i])
-			case PixelTypeFloat64:
-				newPixelData[i] = int64(img.pixels.([]float64)[i])
+		for chunk := 0; chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > numPixels {
+				end = numPixels
 			}
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					switch img.pixelType {
+					case PixelTypeUInt8:
+						newPixelData[i] = int64(img.pixels.([]uint8)[i])
+					case PixelTypeInt8:
+						newPixelData[i] = int64(img.pixels.([]int8)[i])
+					case PixelTypeUInt16:
+						newPixelData[i] = int64(img.pixels.([]uint16)[i])
+					case PixelTypeInt16:
+						newPixelData[i] = int64(img.pixels.([]int16)[i])
+					case PixelTypeUInt32:
+						newPixelData[i] = int64(img.pixels.([]uint32)[i])
+					case PixelTypeInt32:
+						newPixelData[i] = int64(img.pixels.([]int32)[i])
+					case PixelTypeUInt64:
+						newPixelData[i] = int64(img.pixels.([]uint64)[i])
+					case PixelTypeFloat32:
+						newPixelData[i] = int64(img.pixels.([]float32)[i])
+					case PixelTypeFloat64:
+						newPixelData[i] = int64(img.pixels.([]float64)[i])
+					}
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeFloat32:
 		newPixelData := make([]float32, numPixels)
-		for i := 0; i < numPixels; i++ {
-			switch img.pixelType {
-			case PixelTypeUInt8:
-				newPixelData[i] = float32(img.pixels.([]uint8)[i])
-			case PixelTypeInt8:
-				newPixelData[i] = float32(img.pixels.([]int8)[i])
-			case PixelTypeUInt16:
-				newPixelData[i] = float32(img.pixels.([]uint16)[i])
-			case PixelTypeInt16:
-				newPixelData[i] = float32(img.pixels.([]int16)[i])
-			case PixelTypeUInt32:
-				newPixelData[i] = float32(img.pixels.([]uint32)[i])
-			case PixelTypeInt32:
-				newPixelData[i] = float32(img.pixels.([]int32)[i])
-			case PixelTypeUInt64:
-				newPixelData[i] = float32(img.pixels.([]uint64)[i])
-			case PixelTypeInt64:
-				newPixelData[i] = float32(img.pixels.([]int64)[i])
-			case PixelTypeFloat64:
-				newPixelData[i] = float32(img.pixels.([]float64)[i])
+		for chunk := 0; chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > numPixels {
+				end = numPixels
 			}
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					switch img.pixelType {
+					case PixelTypeUInt8:
+						newPixelData[i] = float32(img.pixels.([]uint8)[i])
+					case PixelTypeInt8:
+						newPixelData[i] = float32(img.pixels.([]int8)[i])
+					case PixelTypeUInt16:
+						newPixelData[i] = float32(img.pixels.([]uint16)[i])
+					case PixelTypeInt16:
+						newPixelData[i] = float32(img.pixels.([]int16)[i])
+					case PixelTypeUInt32:
+						newPixelData[i] = float32(img.pixels.([]uint32)[i])
+					case PixelTypeInt32:
+						newPixelData[i] = float32(img.pixels.([]int32)[i])
+					case PixelTypeUInt64:
+						newPixelData[i] = float32(img.pixels.([]uint64)[i])
+					case PixelTypeInt64:
+						newPixelData[i] = float32(img.pixels.([]int64)[i])
+					case PixelTypeFloat64:
+						newPixelData[i] = float32(img.pixels.([]float64)[i])
+					}
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeFloat64:
 		newPixelData := make([]float64, numPixels)
-		for i := 0; i < numPixels; i++ {
-			switch img.pixelType {
-			case PixelTypeUInt8:
-				newPixelData[i] = float64(img.pixels.([]uint8)[i])
-			case PixelTypeInt8:
-				newPixelData[i] = float64(img.pixels.([]int8)[i])
-			case PixelTypeUInt16:
-				newPixelData[i] = float64(img.pixels.([]uint16)[i])
-			case PixelTypeInt16:
-				newPixelData[i] = float64(img.pixels.([]int16)[i])
-			case PixelTypeUInt32:
-				newPixelData[i] = float64(img.pixels.([]uint32)[i])
-			case PixelTypeInt32:
-				newPixelData[i] = float64(img.pixels.([]int32)[i])
-			case PixelTypeUInt64:
-				newPixelData[i] = float64(img.pixels.([]uint64)[i])
-			case PixelTypeInt64:
-				newPixelData[i] = float64(img.pixels.([]int64)[i])
-			case PixelTypeFloat32:
-				newPixelData[i] = float64(img.pixels.([]float32)[i])
+		for chunk := 0; chunk < numGoroutines; chunk++ {
+			start := chunk * chunkSize
+			end := start + chunkSize
+			if end > numPixels {
+				end = numPixels
 			}
+			wg.Add(1)
+			go func(start, end int) {
+				defer wg.Done()
+				for i := start; i < end; i++ {
+					switch img.pixelType {
+					case PixelTypeUInt8:
+						newPixelData[i] = float64(img.pixels.([]uint8)[i])
+					case PixelTypeInt8:
+						newPixelData[i] = float64(img.pixels.([]int8)[i])
+					case PixelTypeUInt16:
+						newPixelData[i] = float64(img.pixels.([]uint16)[i])
+					case PixelTypeInt16:
+						newPixelData[i] = float64(img.pixels.([]int16)[i])
+					case PixelTypeUInt32:
+						newPixelData[i] = float64(img.pixels.([]uint32)[i])
+					case PixelTypeInt32:
+						newPixelData[i] = float64(img.pixels.([]int32)[i])
+					case PixelTypeUInt64:
+						newPixelData[i] = float64(img.pixels.([]uint64)[i])
+					case PixelTypeInt64:
+						newPixelData[i] = float64(img.pixels.([]int64)[i])
+					case PixelTypeFloat32:
+						newPixelData[i] = float64(img.pixels.([]float32)[i])
+					}
+				}
+			}(start, end)
 		}
+		wg.Wait()
 		newImg.pixels = newPixelData
 	default:
 		return nil, fmt.Errorf("unsupported pixel type: %d", pixelType)
