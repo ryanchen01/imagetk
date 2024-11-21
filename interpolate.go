@@ -81,9 +81,6 @@ func linearResample(img *Image, interpolator LinearInterpolator) (*Image, error)
 	chunkSize := uint32(numPixels) / numGoroutines
 	if chunkSize*numGoroutines < uint32(numPixels) {
 		chunkSize += 1
-		if numGoroutines > uint32(numPixels) {
-			numGoroutines = uint32(numPixels)
-		}
 	}
 	wg := sync.WaitGroup{}
 	for chunk := uint32(0); chunk < numGoroutines; chunk++ {

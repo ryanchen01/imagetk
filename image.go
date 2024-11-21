@@ -225,9 +225,6 @@ func GetArrayFromImage(img *Image) (any, error) {
 	chunkSize := uint64(img.NumPixels()) / numGoroutines
 	if chunkSize*numGoroutines < uint64(img.NumPixels()) {
 		chunkSize += 1
-		if numGoroutines > uint64(img.NumPixels()) {
-			numGoroutines = uint64(img.NumPixels())
-		}
 	}
 	wg := sync.WaitGroup{}
 	switch img.pixelType {
@@ -973,9 +970,6 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 	chunkSize := numPixels / numGoroutines
 	if chunkSize*numGoroutines < numPixels {
 		chunkSize += 1
-		if numGoroutines > numPixels {
-			numGoroutines = numPixels
-		}
 	}
 	wg := sync.WaitGroup{}
 	switch pixelType {

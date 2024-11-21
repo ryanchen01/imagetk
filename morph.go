@@ -94,9 +94,6 @@ func binaryDilate3D(image *Image, kernelSize int) (*Image, error) {
 	chunkSize := size[2] / numGoroutines
 	if chunkSize*numGoroutines < size[2] {
 		chunkSize += 1
-		if numGoroutines > size[2] {
-			numGoroutines = size[2]
-		}
 	}
 	wg := sync.WaitGroup{}
 	for chunk := uint32(0); chunk < numGoroutines; chunk++ {
@@ -228,9 +225,6 @@ func binaryErode3D(image *Image, kernelSize int) (*Image, error) {
 	chunkSize := size[2] / numGoroutines
 	if chunkSize*numGoroutines < size[2] {
 		chunkSize += 1
-		if numGoroutines > size[2] {
-			numGoroutines = size[2]
-		}
 	}
 	wg := sync.WaitGroup{}
 	for chunk := uint32(0); chunk < numGoroutines; chunk++ {
