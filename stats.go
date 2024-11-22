@@ -179,6 +179,8 @@ func (img *Image) Max() any {
 	}
 }
 
+// Sum returns the sum of all pixel values in the image.
+// Unsigned pixel types are summed as uint64, signed pixel types are summed as int64, and floating-point pixel types are summed as float64.
 func (img *Image) Sum() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
@@ -246,6 +248,76 @@ func (img *Image) Sum() any {
 	}
 }
 
+// Product returns the product of all pixel values in the image.
+// Unsigned pixel types are multiplied as uint64, signed pixel types are multiplied as int64, and floating-point pixel types are multiplied as float64.
+func (img *Image) Product() any {
+	switch img.pixelType {
+	case PixelTypeUInt8:
+		productValue := uint64(1)
+		for _, value := range img.pixels.([]uint8) {
+			productValue *= uint64(value)
+		}
+		return productValue
+	case PixelTypeInt8:
+		productValue := int64(1)
+		for _, value := range img.pixels.([]int8) {
+			productValue *= int64(value)
+		}
+		return productValue
+	case PixelTypeUInt16:
+		productValue := uint64(1)
+		for _, value := range img.pixels.([]uint16) {
+			productValue *= uint64(value)
+		}
+		return productValue
+	case PixelTypeInt16:
+		productValue := int64(1)
+		for _, value := range img.pixels.([]int16) {
+			productValue *= int64(value)
+		}
+		return productValue
+	case PixelTypeUInt32:
+		productValue := uint64(1)
+		for _, value := range img.pixels.([]uint32) {
+			productValue *= uint64(value)
+		}
+		return productValue
+	case PixelTypeInt32:
+		productValue := int64(1)
+		for _, value := range img.pixels.([]int32) {
+			productValue *= int64(value)
+		}
+		return productValue
+	case PixelTypeUInt64:
+		productValue := uint64(1)
+		for _, value := range img.pixels.([]uint64) {
+			productValue *= uint64(value)
+		}
+		return productValue
+	case PixelTypeInt64:
+		productValue := int64(1)
+		for _, value := range img.pixels.([]int64) {
+			productValue *= int64(value)
+		}
+		return productValue
+	case PixelTypeFloat32:
+		productValue := float64(1)
+		for _, value := range img.pixels.([]float32) {
+			productValue *= float64(value)
+		}
+		return productValue
+	case PixelTypeFloat64:
+		productValue := float64(1)
+		for _, value := range img.pixels.([]float64) {
+			productValue *= float64(value)
+		}
+		return productValue
+	default:
+		return nil
+	}
+}
+
+// ExactMean returns the exact mean of all pixel values in the image.
 func (img *Image) ExactMean() float64 {
 	switch img.pixelType {
 	case PixelTypeUInt8:
@@ -532,4 +604,220 @@ func (img *Image) Std() any {
 	default:
 		return nil
 	}
+}
+
+func (img *Image) Percentile(p float64) float64 {
+	switch img.pixelType {
+	case PixelTypeUInt8:
+		pixelData := make([]uint8, len(img.pixels.([]uint8)))
+		copy(pixelData, img.pixels.([]uint8))
+		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		indexFloat := p * float64(len(pixelData)-1)
+		index := int(indexFloat)
+		if indexFloat == float64(index) {
+			return float64(img.pixels.([]uint8)[index])
+		}
+		value := float64(img.pixels.([]uint8)[index])
+		nextValue := float64(img.pixels.([]uint8)[index+1])
+		return value + (indexFloat-float64(index))*(nextValue-value)
+	case PixelTypeInt8:
+		pixelData := make([]int8, len(img.pixels.([]int8)))
+		copy(pixelData, img.pixels.([]int8))
+		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		indexFloat := p * float64(len(pixelData)-1)
+		index := int(indexFloat)
+		if indexFloat == float64(index) {
+			return float64(img.pixels.([]int8)[index])
+		}
+		value := float64(img.pixels.([]int8)[index])
+		nextValue := float64(img.pixels.([]int8)[index+1])
+		return value + (indexFloat-float64(index))*(nextValue-value)
+	case PixelTypeUInt16:
+		pixelData := make([]uint16, len(img.pixels.([]uint16)))
+		copy(pixelData, img.pixels.([]uint16))
+		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		indexFloat := p * float64(len(pixelData)-1)
+		index := int(indexFloat)
+		if indexFloat == float64(index) {
+			return float64(img.pixels.([]uint16)[index])
+		}
+		value := float64(img.pixels.([]uint16)[index])
+		nextValue := float64(img.pixels.([]uint16)[index+1])
+		return value + (indexFloat-float64(index))*(nextValue-value)
+	case PixelTypeInt16:
+		pixelData := make([]int16, len(img.pixels.([]int16)))
+		copy(pixelData, img.pixels.([]int16))
+		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		indexFloat := p * float64(len(pixelData)-1)
+		index := int(indexFloat)
+		if indexFloat == float64(index) {
+			return float64(img.pixels.([]int16)[index])
+		}
+		value := float64(img.pixels.([]int16)[index])
+		nextValue := float64(img.pixels.([]int16)[index+1])
+		return value + (indexFloat-float64(index))*(nextValue-value)
+	case PixelTypeUInt32:
+		pixelData := make([]uint32, len(img.pixels.([]uint32)))
+		copy(pixelData, img.pixels.([]uint32))
+		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		indexFloat := p * float64(len(pixelData)-1)
+		index := int(indexFloat)
+		if indexFloat == float64(index) {
+			return float64(img.pixels.([]uint32)[index])
+		}
+		value := float64(img.pixels.([]uint32)[index])
+		nextValue := float64(img.pixels.([]uint32)[index+1])
+		return value + (indexFloat-float64(index))*(nextValue-value)
+	case PixelTypeInt32:
+		pixelData := make([]int32, len(img.pixels.([]int32)))
+		copy(pixelData, img.pixels.([]int32))
+		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		indexFloat := p * float64(len(pixelData)-1)
+		index := int(indexFloat)
+		if indexFloat == float64(index) {
+			return float64(img.pixels.([]int32)[index])
+		}
+		value := float64(img.pixels.([]int32)[index])
+		nextValue := float64(img.pixels.([]int32)[index+1])
+		return value + (indexFloat-float64(index))*(nextValue-value)
+	case PixelTypeUInt64:
+		pixelData := make([]uint64, len(img.pixels.([]uint64)))
+		copy(pixelData, img.pixels.([]uint64))
+		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		indexFloat := p * float64(len(pixelData)-1)
+		index := int(indexFloat)
+		if indexFloat == float64(index) {
+			return float64(img.pixels.([]uint64)[index])
+		}
+		value := float64(img.pixels.([]uint64)[index])
+		nextValue := float64(img.pixels.([]uint64)[index+1])
+		return value + (indexFloat-float64(index))*(nextValue-value)
+	case PixelTypeInt64:
+		pixelData := make([]int64, len(img.pixels.([]int64)))
+		copy(pixelData, img.pixels.([]int64))
+		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		indexFloat := p * float64(len(pixelData)-1)
+		index := int(indexFloat)
+		if indexFloat == float64(index) {
+			return float64(img.pixels.([]int64)[index])
+		}
+		value := float64(img.pixels.([]int64)[index])
+		nextValue := float64(img.pixels.([]int64)[index+1])
+		return value + (indexFloat-float64(index))*(nextValue-value)
+	case PixelTypeFloat32:
+		pixelData := make([]float32, len(img.pixels.([]float32)))
+		copy(pixelData, img.pixels.([]float32))
+		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		indexFloat := p * float64(len(pixelData)-1)
+		index := int(indexFloat)
+		if indexFloat == float64(index) {
+			return float64(img.pixels.([]float32)[index])
+		}
+		value := float64(img.pixels.([]float32)[index])
+		nextValue := float64(img.pixels.([]float32)[index+1])
+		return value + (indexFloat-float64(index))*(nextValue-value)
+	case PixelTypeFloat64:
+		pixelData := make([]float64, len(img.pixels.([]float64)))
+		copy(pixelData, img.pixels.([]float64))
+		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		indexFloat := p * float64(len(pixelData)-1)
+		index := int(indexFloat)
+		if indexFloat == float64(index) {
+			return float64(img.pixels.([]float64)[index])
+		}
+		value := float64(img.pixels.([]float64)[index])
+		nextValue := float64(img.pixels.([]float64)[index+1])
+		return value + (indexFloat-float64(index))*(nextValue-value)
+	default:
+		return 0
+	}
+}
+
+// OtsuThreshold returns the threshold value for the Otsu thresholding method.
+// Returns:
+// - float64: The threshold value.
+func (img *Image) OtsuThreshold() float64 {
+	var maxVal float64
+	switch img.pixelType {
+	case PixelTypeUInt8:
+		maxVal = float64(img.Max().(uint8))
+	case PixelTypeInt8:
+		maxVal = float64(img.Max().(int8))
+	case PixelTypeUInt16:
+		maxVal = float64(img.Max().(uint16))
+	case PixelTypeInt16:
+		maxVal = float64(img.Max().(int16))
+	case PixelTypeUInt32:
+		maxVal = float64(img.Max().(uint32))
+	case PixelTypeInt32:
+		maxVal = float64(img.Max().(int32))
+	case PixelTypeUInt64:
+		maxVal = float64(img.Max().(uint64))
+	case PixelTypeInt64:
+		maxVal = float64(img.Max().(int64))
+	case PixelTypeFloat32:
+		maxVal = float64(img.Max().(float32))
+	case PixelTypeFloat64:
+		maxVal = float64(img.Max().(float64))
+	default:
+		return 0
+	}
+
+	size := img.GetSize()
+	hist := make([]int, 256)
+	switch img.dimension {
+	case 2:
+		for y := 0; y < int(size[1]); y++ {
+			for x := 0; x < int(size[0]); x++ {
+				value, err := img.GetPixelAsFloat64([]uint32{uint32(x), uint32(y)})
+				if err != nil {
+					return 0
+				}
+				hist[int(value/maxVal*255)]++
+			}
+		}
+	case 3:
+		for z := 0; z < int(size[2]); z++ {
+			for y := 0; y < int(size[1]); y++ {
+				for x := 0; x < int(size[0]); x++ {
+					value, err := img.GetPixelAsFloat64([]uint32{uint32(x), uint32(y), uint32(z)})
+					if err != nil {
+						return 0
+					}
+					hist[int(value/maxVal*255)]++
+				}
+			}
+		}
+	}
+
+	total := 1
+	for _, v := range size {
+		total *= int(v)
+	}
+
+	sum := 0
+	for i := 0; i < 256; i++ {
+		sum += hist[i] * i
+	}
+
+	sumB, wB, wF, varMax, threshold := 0, 0, 0, 0.0, 0
+	for t := 0; t < 256; t++ {
+		wB += hist[t]
+		if wB == 0 {
+			continue
+		}
+		wF = total - wB
+		if wF == 0 {
+			break
+		}
+		sumB += t * hist[t]
+		mB := float64(sumB) / float64(wB)
+		mF := float64(sum-sumB) / float64(wF)
+		varBetween := float64(wB) * float64(wF) * (mB - mF) * (mB - mF)
+		if varBetween > varMax {
+			varMax = varBetween
+			threshold = t
+		}
+	}
+	return float64(threshold) / 255.0 * maxVal
 }
