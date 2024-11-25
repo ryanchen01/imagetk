@@ -48,7 +48,13 @@ func invert3x3(m [9]float64) ([9]float64, error) {
 }
 
 // GetPixelFromPoint returns the interpolated pixel value at a given physical point in the image.
-// If the point is outside the image bounds, it handles it according to fillType.
+// Parameters:
+//   - point: A slice of float64 representing the physical point.
+//   - fillType: The type of fill to use if the point is outside the image bounds.
+//
+// Returns:
+//   - float64: The interpolated pixel value.
+//   - error: An error if the operation fails.
 func (img *Image) GetPixelFromPoint(point []float64, fillType int) (float64, error) {
 	if len(point) != int(img.dimension) {
 		return 0.0, fmt.Errorf("point dimension does not match image dimension")

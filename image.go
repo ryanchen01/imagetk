@@ -522,30 +522,43 @@ func (img *Image) GetPixelType() int {
 	return img.pixelType
 }
 
+// IsPixelType checks if the pixel type of the image matches the given pixel type.
 func (img *Image) IsPixelType(pixelType int) bool {
 	return img.pixelType == pixelType
 }
 
+// GetDimension returns the number of dimensions of the image.
 func (img *Image) GetDimension() uint32 {
 	return img.dimension
 }
 
+// GetSize returns the size of the image.
 func (img *Image) GetSize() []uint32 {
 	return img.size
 }
 
+// GetSpacing returns the spacing of the image.
 func (img *Image) GetSpacing() []float64 {
 	return img.spacing
 }
 
+// GetOrigin returns the origin of the image.
 func (img *Image) GetOrigin() []float64 {
 	return img.origin
 }
 
+// GetDirection returns the direction matrix of the image.
 func (img *Image) GetDirection() [9]float64 {
 	return img.direction
 }
 
+// GetPixel returns the pixel value at the given index.
+// Parameters:
+//   - index: A slice of uint32 representing the index of the pixel.
+//
+// Returns:
+//   - any: The pixel value as the type of the image.
+//   - error: An error if the index is out of range.
 func (img *Image) GetPixel(index []uint32) (any, error) {
 	if len(index) != int(img.dimension) {
 		return nil, fmt.Errorf("invalid index length: %d", len(index))
@@ -583,6 +596,13 @@ func (img *Image) GetPixel(index []uint32) (any, error) {
 	}
 }
 
+// GetPixelAsUInt8 returns the pixel value at the given index as a uint8.
+// Parameters:
+//   - index: A slice of uint32 representing the index of the pixel.
+//
+// Returns:
+//   - uint8: The pixel value as a uint8.
+//   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt8(index []uint32) (uint8, error) {
 	idx := uint32(0)
 	for i := len(index) - 1; i >= 0; i-- {
@@ -617,6 +637,13 @@ func (img *Image) GetPixelAsUInt8(index []uint32) (uint8, error) {
 	}
 }
 
+// GetPixelAsInt8 returns the pixel value at the given index as a int8.
+// Parameters:
+//   - index: A slice of uint32 representing the index of the pixel.
+//
+// Returns:
+//   - int8: The pixel value as a int8.
+//   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt8(index []uint32) (int8, error) {
 	idx := uint32(0)
 	for i := len(index) - 1; i >= 0; i-- {
@@ -651,6 +678,13 @@ func (img *Image) GetPixelAsInt8(index []uint32) (int8, error) {
 	}
 }
 
+// GetPixelAsUInt16 returns the pixel value at the given index as a uint16.
+// Parameters:
+//   - index: A slice of uint32 representing the index of the pixel.
+//
+// Returns:
+//   - uint16: The pixel value as a uint16.
+//   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt16(index []uint32) (uint16, error) {
 	idx := uint32(0)
 	for i := len(index) - 1; i >= 0; i-- {
@@ -685,6 +719,13 @@ func (img *Image) GetPixelAsUInt16(index []uint32) (uint16, error) {
 	}
 }
 
+// GetPixelAsInt16 returns the pixel value at the given index as a int16.
+// Parameters:
+//   - index: A slice of uint32 representing the index of the pixel.
+//
+// Returns:
+//   - int16: The pixel value as a int16.
+//   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt16(index []uint32) (int16, error) {
 	idx := uint32(0)
 	for i := len(index) - 1; i >= 0; i-- {
@@ -719,6 +760,13 @@ func (img *Image) GetPixelAsInt16(index []uint32) (int16, error) {
 	}
 }
 
+// GetPixelAsUInt32 returns the pixel value at the given index as a uint32.
+// Parameters:
+//   - index: A slice of uint32 representing the index of the pixel.
+//
+// Returns:
+//   - uint32: The pixel value as a uint32.
+//   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt32(index []uint32) (uint32, error) {
 	idx := uint32(0)
 	for i := len(index) - 1; i >= 0; i-- {
@@ -753,6 +801,13 @@ func (img *Image) GetPixelAsUInt32(index []uint32) (uint32, error) {
 	}
 }
 
+// GetPixelAsInt32 returns the pixel value at the given index as a int32.
+// Parameters:
+//   - index: A slice of uint32 representing the index of the pixel.
+//
+// Returns:
+//   - int32: The pixel value as a int32.
+//   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt32(index []uint32) (int32, error) {
 	idx := uint32(0)
 	for i := len(index) - 1; i >= 0; i-- {
@@ -787,6 +842,13 @@ func (img *Image) GetPixelAsInt32(index []uint32) (int32, error) {
 	}
 }
 
+// GetPixelAsUInt64 returns the pixel value at the given index as a uint64.
+// Parameters:
+//   - index: A slice of uint32 representing the index of the pixel.
+//
+// Returns:
+//   - uint64: The pixel value as a uint64.
+//   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt64(index []uint32) (uint64, error) {
 	idx := uint32(0)
 	for i := len(index) - 1; i >= 0; i-- {
@@ -821,6 +883,13 @@ func (img *Image) GetPixelAsUInt64(index []uint32) (uint64, error) {
 	}
 }
 
+// GetPixelAsInt64 returns the pixel value at the given index as a int64.
+// Parameters:
+//   - index: A slice of uint32 representing the index of the pixel.
+//
+// Returns:
+//   - int64: The pixel value as a int64.
+//   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt64(index []uint32) (int64, error) {
 	idx := uint32(0)
 	for i := len(index) - 1; i >= 0; i-- {
@@ -855,6 +924,13 @@ func (img *Image) GetPixelAsInt64(index []uint32) (int64, error) {
 	}
 }
 
+// GetPixelAsFloat32 returns the pixel value at the given index as a float32.
+// Parameters:
+//   - index: A slice of uint32 representing the index of the pixel.
+//
+// Returns:
+//   - float32: The pixel value as a float32.
+//   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsFloat32(index []uint32) (float32, error) {
 	idx := uint32(0)
 	for i := len(index) - 1; i >= 0; i-- {
@@ -889,6 +965,13 @@ func (img *Image) GetPixelAsFloat32(index []uint32) (float32, error) {
 	}
 }
 
+// GetPixelAsFloat64 returns the pixel value at the given index as a float64.
+// Parameters:
+//   - index: A slice of uint32 representing the index of the pixel.
+//
+// Returns:
+//   - float64: The pixel value as a float64.
+//   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsFloat64(index []uint32) (float64, error) {
 	idx := uint32(0)
 	for i := len(index) - 1; i >= 0; i-- {
