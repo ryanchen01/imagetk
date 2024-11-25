@@ -5,6 +5,10 @@ import (
 	"sort"
 )
 
+// Min returns the minimum pixel value in the image.
+//
+// Returns:
+//   - any: The minimum pixel value in the image as the type of the image.
 func (img *Image) Min() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
@@ -92,6 +96,10 @@ func (img *Image) Min() any {
 	}
 }
 
+// Max returns the maximum pixel value in the image.
+//
+// Returns:
+//   - any: The maximum pixel value in the image as the type of the image.
 func (img *Image) Max() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
@@ -180,7 +188,9 @@ func (img *Image) Max() any {
 }
 
 // Sum returns the sum of all pixel values in the image.
-// Unsigned pixel types are summed as uint64, signed pixel types are summed as int64, and floating-point pixel types are summed as float64.
+//
+// Returns:
+//   - any: The sum of all pixel values in the image. Unsigned pixel types are summed as uint64, signed pixel types are summed as int64, and floating-point pixel types are summed as float64.
 func (img *Image) Sum() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
@@ -249,7 +259,9 @@ func (img *Image) Sum() any {
 }
 
 // Product returns the product of all pixel values in the image.
-// Unsigned pixel types are multiplied as uint64, signed pixel types are multiplied as int64, and floating-point pixel types are multiplied as float64.
+//
+// Returns:
+//   - any: The product of all pixel values in the image. Unsigned pixel types are multiplied as uint64, signed pixel types are multiplied as int64, and floating-point pixel types are multiplied as float64.
 func (img *Image) Product() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
@@ -318,6 +330,9 @@ func (img *Image) Product() any {
 }
 
 // ExactMean returns the exact mean of all pixel values in the image.
+//
+// Returns:
+//   - float64: The exact mean of the image.
 func (img *Image) ExactMean() float64 {
 	switch img.pixelType {
 	case PixelTypeUInt8:
@@ -385,6 +400,10 @@ func (img *Image) ExactMean() float64 {
 	}
 }
 
+// Mean returns the mean of the image.
+//
+// Returns:
+//   - any: The mean of the image as the type of the image.
 func (img *Image) Mean() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
@@ -452,6 +471,10 @@ func (img *Image) Mean() any {
 	}
 }
 
+// Median returns the median of the image.
+//
+// Returns:
+//   - float64: The median of the image.
 func (img *Image) Median() float64 {
 	switch img.pixelType {
 	case PixelTypeUInt8:
@@ -519,6 +542,10 @@ func (img *Image) Median() float64 {
 	}
 }
 
+// Std returns the standard deviation of the image.
+//
+// Returns:
+//   - any: The standard deviation of the image.
 func (img *Image) Std() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
@@ -606,6 +633,12 @@ func (img *Image) Std() any {
 	}
 }
 
+// Percentile returns the percentile value of the image.
+// Parameters:
+//   - p: The percentile to compute (between 0 and 1).
+//
+// Returns:
+//   - float64: The percentile value.
 func (img *Image) Percentile(p float64) float64 {
 	switch img.pixelType {
 	case PixelTypeUInt8:

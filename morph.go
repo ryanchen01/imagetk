@@ -10,6 +10,14 @@ const (
 	MORPH_CLOSE
 )
 
+// BinaryDilate dilates the binary image.
+// Parameters:
+//   - image: The image to dilate.
+//   - kernelSize: The size of the kernel to use for the dilation.
+//
+// Returns:
+//   - *Image: The resulting image after dilation.
+//   - error: An error if the operation fails.
 func BinaryDilate(image *Image, kernelSize int) (*Image, error) {
 	switch image.GetDimension() {
 	case 2:
@@ -21,6 +29,14 @@ func BinaryDilate(image *Image, kernelSize int) (*Image, error) {
 	}
 }
 
+// BinaryErode erodes the binary image.
+// Parameters:
+//   - image: The image to erode.
+//   - kernelSize: The size of the kernel to use for the erosion.
+//
+// Returns:
+//   - *Image: The resulting image after erosion.
+//   - error: An error if the operation fails.
 func BinaryErode(image *Image, kernelSize int) (*Image, error) {
 	switch image.GetDimension() {
 	case 2:
@@ -32,6 +48,16 @@ func BinaryErode(image *Image, kernelSize int) (*Image, error) {
 	}
 }
 
+// Morphology performs morphological operations on the image.
+// Parameters:
+//   - image: The image to perform the morphological operation on.
+//   - operation: The morphological operation to perform.
+//   - kernelSize: The size of the kernel to use for the morphological operation.
+//   - iterations: The number of iterations to perform.
+//
+// Returns:
+//   - *Image: The resulting image after the morphological operation.
+//   - error: An error if the operation fails.
 func Morphology(image *Image, operation, kernelSize, iterations int) (*Image, error) {
 	var output *Image
 	var err error
