@@ -1,3 +1,4 @@
+// Package image provides functions for creating, manipulating, and analyzing images.
 package imagetk
 
 import (
