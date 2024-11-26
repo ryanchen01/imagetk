@@ -36,13 +36,13 @@ const (
 // dimensions, size, spacing, origin, and direction.
 //
 // Fields:
-// - pixels: The pixel data of the image, type can vary.
-// - pixelType: An integer representing the type of pixels.
-// - dimension: The number of dimensions of the image (2<=N<=3).
-// - size: A slice of uint32 representing the size of the image in each dimension (2<=N<=3).
-// - spacing: A slice of float64 representing the spacing between pixels in each dimension.
-// - origin: A slice of float64 representing the origin of the image.
-// - direction: An array of 9 float64 values representing the direction cosines of the image.
+//   - pixels: The pixel data of the image, type can vary.
+//   - pixelType: An integer representing the type of pixels.
+//   - dimension: The number of dimensions of the image (2<=N<=3).
+//   - size: A slice of uint32 representing the size of the image in each dimension (2<=N<=3).
+//   - spacing: A slice of float64 representing the spacing between pixels in each dimension.
+//   - origin: A slice of float64 representing the origin of the image.
+//   - direction: An array of 9 float64 values representing the direction cosines of the image.
 type Image struct {
 	pixels    any
 	pixelType int
