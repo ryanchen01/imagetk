@@ -768,7 +768,7 @@ func (img *Image) Percentile(p float64) float64 {
 
 // OtsuThreshold returns the threshold value for the Otsu thresholding method.
 // Returns:
-// - float64: The threshold value.
+//   - float64: The threshold value.
 func (img *Image) OtsuThreshold() float64 {
 	var maxVal float64
 	switch img.pixelType {
