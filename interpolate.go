@@ -105,10 +105,19 @@ func linearResample(img *Image, interpolator LinearInterpolator) (*Image, error)
 			for i := start; i < end; i++ {
 				point := make([]float64, len(interpolator.Size))
 				idx := i
+				indices := make([]float64, len(interpolator.Size))
 				for j := 0; j < len(interpolator.Size); j++ {
-					point[j] = float64(idx/uint32(strides[j]))*interpolator.Spacing[j] + interpolator.Origin[j]
+					indices[j] = float64(idx / uint32(strides[j]))
 					idx %= uint32(strides[j])
 				}
+
+				for j := 0; j < len(interpolator.Size); j++ {
+					for k := 0; k < len(interpolator.Size); k++ {
+						point[j] += interpolator.Direction[j*3+k] * indices[k] * interpolator.Spacing[k]
+					}
+					point[j] += interpolator.Origin[j]
+				}
+
 				value, err := img.GetPixelFromPoint(point, interpolator.FillType)
 				if err != nil {
 					return
@@ -195,9 +204,17 @@ func nearestResample(img *Image, interpolator NearestInterpolator) (*Image, erro
 			for i := start; i < end; i++ {
 				point := make([]float64, len(interpolator.Size))
 				idx := i
+				indices := make([]float64, len(interpolator.Size))
 				for j := 0; j < len(interpolator.Size); j++ {
-					point[j] = float64(idx/uint32(strides[j]))*interpolator.Spacing[j] + interpolator.Origin[j]
+					indices[j] = float64(idx / uint32(strides[j]))
 					idx %= uint32(strides[j])
+				}
+
+				for j := 0; j < len(interpolator.Size); j++ {
+					for k := 0; k < len(interpolator.Size); k++ {
+						point[j] += interpolator.Direction[j*3+k] * indices[k] * interpolator.Spacing[k]
+					}
+					point[j] += interpolator.Origin[j]
 				}
 
 				// Transform the physical point back to input image space
