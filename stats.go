@@ -1,6 +1,7 @@
 package imagetk
 
 import (
+	"encoding/binary"
 	"math"
 	"sort"
 )
@@ -13,23 +14,24 @@ func (img *Image) Min() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
 		minValue := uint8(math.MaxUint8)
-		for _, value := range img.pixels.([]uint8) {
-			if value < minValue {
-				minValue = value
+		for i := 0; i < len(img.pixels); i++ {
+			if uint8(img.pixels[i]) < minValue {
+				minValue = uint8(img.pixels[i])
 			}
 		}
 		return minValue
 	case PixelTypeInt8:
 		minValue := int8(math.MaxInt8)
-		for _, value := range img.pixels.([]int8) {
-			if value < minValue {
-				minValue = value
+		for i := 0; i < len(img.pixels); i++ {
+			if int8(img.pixels[i]) < minValue {
+				minValue = int8(img.pixels[i])
 			}
 		}
 		return minValue
 	case PixelTypeUInt16:
 		minValue := uint16(math.MaxUint16)
-		for _, value := range img.pixels.([]uint16) {
+		for i := 0; i < len(img.pixels)/2; i++ {
+			value := binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2])
 			if value < minValue {
 				minValue = value
 			}
@@ -37,7 +39,8 @@ func (img *Image) Min() any {
 		return minValue
 	case PixelTypeInt16:
 		minValue := int16(math.MaxInt16)
-		for _, value := range img.pixels.([]int16) {
+		for i := 0; i < len(img.pixels)/2; i++ {
+			value := int16(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2]))
 			if value < minValue {
 				minValue = value
 			}
@@ -45,7 +48,8 @@ func (img *Image) Min() any {
 		return minValue
 	case PixelTypeUInt32:
 		minValue := uint32(math.MaxUint32)
-		for _, value := range img.pixels.([]uint32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4])
 			if value < minValue {
 				minValue = value
 			}
@@ -53,7 +57,8 @@ func (img *Image) Min() any {
 		return minValue
 	case PixelTypeInt32:
 		minValue := int32(math.MaxInt32)
-		for _, value := range img.pixels.([]int32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := int32(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))
 			if value < minValue {
 				minValue = value
 			}
@@ -61,7 +66,8 @@ func (img *Image) Min() any {
 		return minValue
 	case PixelTypeUInt64:
 		minValue := uint64(math.MaxUint64)
-		for _, value := range img.pixels.([]uint64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8])
 			if value < minValue {
 				minValue = value
 			}
@@ -69,7 +75,8 @@ func (img *Image) Min() any {
 		return minValue
 	case PixelTypeInt64:
 		minValue := int64(math.MaxInt64)
-		for _, value := range img.pixels.([]int64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := int64(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))
 			if value < minValue {
 				minValue = value
 			}
@@ -77,7 +84,8 @@ func (img *Image) Min() any {
 		return minValue
 	case PixelTypeFloat32:
 		minValue := float32(math.MaxFloat32)
-		for _, value := range img.pixels.([]float32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))
 			if value < minValue {
 				minValue = value
 			}
@@ -85,7 +93,8 @@ func (img *Image) Min() any {
 		return minValue
 	case PixelTypeFloat64:
 		minValue := float64(math.MaxFloat64)
-		for _, value := range img.pixels.([]float64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))
 			if value < minValue {
 				minValue = value
 			}
@@ -104,23 +113,24 @@ func (img *Image) Max() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
 		maxValue := uint8(0)
-		for _, value := range img.pixels.([]uint8) {
-			if value > maxValue {
-				maxValue = value
+		for i := 0; i < len(img.pixels); i++ {
+			if uint8(img.pixels[i]) > maxValue {
+				maxValue = uint8(img.pixels[i])
 			}
 		}
 		return maxValue
 	case PixelTypeInt8:
 		maxValue := int8(math.MinInt8)
-		for _, value := range img.pixels.([]int8) {
-			if value > maxValue {
-				maxValue = value
+		for i := 0; i < len(img.pixels); i++ {
+			if int8(img.pixels[i]) > maxValue {
+				maxValue = int8(img.pixels[i])
 			}
 		}
 		return maxValue
 	case PixelTypeUInt16:
 		maxValue := uint16(0)
-		for _, value := range img.pixels.([]uint16) {
+		for i := 0; i < len(img.pixels)/2; i++ {
+			value := binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2])
 			if value > maxValue {
 				maxValue = value
 			}
@@ -128,7 +138,8 @@ func (img *Image) Max() any {
 		return maxValue
 	case PixelTypeInt16:
 		maxValue := int16(math.MinInt16)
-		for _, value := range img.pixels.([]int16) {
+		for i := 0; i < len(img.pixels)/2; i++ {
+			value := int16(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2]))
 			if value > maxValue {
 				maxValue = value
 			}
@@ -136,7 +147,8 @@ func (img *Image) Max() any {
 		return maxValue
 	case PixelTypeUInt32:
 		maxValue := uint32(0)
-		for _, value := range img.pixels.([]uint32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4])
 			if value > maxValue {
 				maxValue = value
 			}
@@ -144,7 +156,8 @@ func (img *Image) Max() any {
 		return maxValue
 	case PixelTypeInt32:
 		maxValue := int32(math.MinInt32)
-		for _, value := range img.pixels.([]int32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := int32(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))
 			if value > maxValue {
 				maxValue = value
 			}
@@ -152,7 +165,8 @@ func (img *Image) Max() any {
 		return maxValue
 	case PixelTypeUInt64:
 		maxValue := uint64(0)
-		for _, value := range img.pixels.([]uint64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8])
 			if value > maxValue {
 				maxValue = value
 			}
@@ -160,7 +174,8 @@ func (img *Image) Max() any {
 		return maxValue
 	case PixelTypeInt64:
 		maxValue := int64(math.MinInt64)
-		for _, value := range img.pixels.([]int64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := int64(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))
 			if value > maxValue {
 				maxValue = value
 			}
@@ -168,7 +183,8 @@ func (img *Image) Max() any {
 		return maxValue
 	case PixelTypeFloat32:
 		maxValue := float32(-math.MaxFloat32)
-		for _, value := range img.pixels.([]float32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))
 			if value > maxValue {
 				maxValue = value
 			}
@@ -176,7 +192,8 @@ func (img *Image) Max() any {
 		return maxValue
 	case PixelTypeFloat64:
 		maxValue := float64(-math.MaxFloat64)
-		for _, value := range img.pixels.([]float64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))
 			if value > maxValue {
 				maxValue = value
 			}
@@ -195,61 +212,69 @@ func (img *Image) Sum() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
 		sumValue := uint64(0)
-		for _, value := range img.pixels.([]uint8) {
-			sumValue += uint64(value)
+		for i := 0; i < len(img.pixels); i++ {
+			sumValue += uint64(uint8(img.pixels[i]))
 		}
 		return sumValue
 	case PixelTypeInt8:
 		sumValue := int64(0)
-		for _, value := range img.pixels.([]int8) {
-			sumValue += int64(value)
+		for i := 0; i < len(img.pixels); i++ {
+			sumValue += int64(int8(img.pixels[i]))
 		}
 		return sumValue
 	case PixelTypeUInt16:
 		sumValue := uint64(0)
-		for _, value := range img.pixels.([]uint16) {
+		for i := 0; i < len(img.pixels)/2; i++ {
+			value := binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2])
 			sumValue += uint64(value)
 		}
 		return sumValue
 	case PixelTypeInt16:
 		sumValue := int64(0)
-		for _, value := range img.pixels.([]int16) {
+		for i := 0; i < len(img.pixels)/2; i++ {
+			value := int16(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2]))
 			sumValue += int64(value)
 		}
 		return sumValue
 	case PixelTypeUInt32:
 		sumValue := uint64(0)
-		for _, value := range img.pixels.([]uint32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4])
 			sumValue += uint64(value)
 		}
 		return sumValue
 	case PixelTypeInt32:
 		sumValue := int64(0)
-		for _, value := range img.pixels.([]int32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := int32(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))
 			sumValue += int64(value)
 		}
 		return sumValue
 	case PixelTypeUInt64:
 		sumValue := uint64(0)
-		for _, value := range img.pixels.([]uint64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8])
 			sumValue += uint64(value)
 		}
 		return sumValue
 	case PixelTypeInt64:
 		sumValue := int64(0)
-		for _, value := range img.pixels.([]int64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := int64(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))
 			sumValue += int64(value)
 		}
 		return sumValue
 	case PixelTypeFloat32:
 		sumValue := float64(0)
-		for _, value := range img.pixels.([]float32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))
 			sumValue += float64(value)
 		}
 		return sumValue
 	case PixelTypeFloat64:
 		sumValue := float64(0)
-		for _, value := range img.pixels.([]float64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))
 			sumValue += float64(value)
 		}
 		return sumValue
@@ -266,61 +291,69 @@ func (img *Image) Product() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
 		productValue := uint64(1)
-		for _, value := range img.pixels.([]uint8) {
-			productValue *= uint64(value)
+		for i := 0; i < len(img.pixels); i++ {
+			productValue *= uint64(uint8(img.pixels[i]))
 		}
 		return productValue
 	case PixelTypeInt8:
 		productValue := int64(1)
-		for _, value := range img.pixels.([]int8) {
-			productValue *= int64(value)
+		for i := 0; i < len(img.pixels); i++ {
+			productValue *= int64(int8(img.pixels[i]))
 		}
 		return productValue
 	case PixelTypeUInt16:
 		productValue := uint64(1)
-		for _, value := range img.pixels.([]uint16) {
+		for i := 0; i < len(img.pixels)/2; i++ {
+			value := binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2])
 			productValue *= uint64(value)
 		}
 		return productValue
 	case PixelTypeInt16:
 		productValue := int64(1)
-		for _, value := range img.pixels.([]int16) {
+		for i := 0; i < len(img.pixels)/2; i++ {
+			value := int16(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2]))
 			productValue *= int64(value)
 		}
 		return productValue
 	case PixelTypeUInt32:
 		productValue := uint64(1)
-		for _, value := range img.pixels.([]uint32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4])
 			productValue *= uint64(value)
 		}
 		return productValue
 	case PixelTypeInt32:
 		productValue := int64(1)
-		for _, value := range img.pixels.([]int32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := int32(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))
 			productValue *= int64(value)
 		}
 		return productValue
 	case PixelTypeUInt64:
 		productValue := uint64(1)
-		for _, value := range img.pixels.([]uint64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8])
 			productValue *= uint64(value)
 		}
 		return productValue
 	case PixelTypeInt64:
 		productValue := int64(1)
-		for _, value := range img.pixels.([]int64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := int64(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))
 			productValue *= int64(value)
 		}
 		return productValue
 	case PixelTypeFloat32:
 		productValue := float64(1)
-		for _, value := range img.pixels.([]float32) {
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))
 			productValue *= float64(value)
 		}
 		return productValue
 	case PixelTypeFloat64:
 		productValue := float64(1)
-		for _, value := range img.pixels.([]float64) {
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))
 			productValue *= float64(value)
 		}
 		return productValue
@@ -335,66 +368,15 @@ func (img *Image) Product() any {
 //   - float64: The exact mean of the image.
 func (img *Image) ExactMean() float64 {
 	switch img.pixelType {
-	case PixelTypeUInt8:
-		sumValue := uint64(0)
-		for _, value := range img.pixels.([]uint8) {
-			sumValue += uint64(value)
-		}
-		return float64(sumValue) / float64(len(img.pixels.([]uint8)))
-	case PixelTypeInt8:
-		sumValue := int64(0)
-		for _, value := range img.pixels.([]int8) {
-			sumValue += int64(value)
-		}
-		return float64(sumValue) / float64(len(img.pixels.([]int8)))
-	case PixelTypeUInt16:
-		sumValue := uint64(0)
-		for _, value := range img.pixels.([]uint16) {
-			sumValue += uint64(value)
-		}
-		return float64(sumValue) / float64(len(img.pixels.([]uint16)))
-	case PixelTypeInt16:
-		sumValue := int64(0)
-		for _, value := range img.pixels.([]int16) {
-			sumValue += int64(value)
-		}
-		return float64(sumValue) / float64(len(img.pixels.([]int16)))
-	case PixelTypeUInt32:
-		sumValue := uint64(0)
-		for _, value := range img.pixels.([]uint32) {
-			sumValue += uint64(value)
-		}
-		return float64(sumValue) / float64(len(img.pixels.([]uint32)))
-	case PixelTypeInt32:
-		sumValue := int64(0)
-		for _, value := range img.pixels.([]int32) {
-			sumValue += int64(value)
-		}
-		return float64(sumValue) / float64(len(img.pixels.([]int32)))
-	case PixelTypeUInt64:
-		sumValue := uint64(0)
-		for _, value := range img.pixels.([]uint64) {
-			sumValue += uint64(value)
-		}
-		return float64(sumValue) / float64(len(img.pixels.([]uint64)))
-	case PixelTypeInt64:
-		sumValue := int64(0)
-		for _, value := range img.pixels.([]int64) {
-			sumValue += int64(value)
-		}
-		return float64(sumValue) / float64(len(img.pixels.([]int64)))
-	case PixelTypeFloat32:
-		sumValue := float64(0)
-		for _, value := range img.pixels.([]float32) {
-			sumValue += float64(value)
-		}
-		return sumValue / float64(len(img.pixels.([]float32)))
-	case PixelTypeFloat64:
-		sumValue := float64(0)
-		for _, value := range img.pixels.([]float64) {
-			sumValue += float64(value)
-		}
-		return sumValue / float64(len(img.pixels.([]float64)))
+	case PixelTypeUInt8, PixelTypeUInt16, PixelTypeUInt32, PixelTypeUInt64:
+		sumValue := img.Sum().(uint64)
+		return float64(sumValue) / float64(len(img.pixels)/img.bytesPerPixel)
+	case PixelTypeInt8, PixelTypeInt16, PixelTypeInt32, PixelTypeInt64:
+		sumValue := img.Sum().(int64)
+		return float64(sumValue) / float64(len(img.pixels)/img.bytesPerPixel)
+	case PixelTypeFloat32, PixelTypeFloat64:
+		sumValue := img.Sum().(float64)
+		return sumValue / float64(len(img.pixels)/img.bytesPerPixel)
 	default:
 		return 0
 	}
@@ -407,65 +389,25 @@ func (img *Image) ExactMean() float64 {
 func (img *Image) Mean() any {
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		sumValue := uint8(0)
-		for _, value := range img.pixels.([]uint8) {
-			sumValue += value
-		}
-		return sumValue / uint8(len(img.pixels.([]uint8)))
+		return uint8(img.ExactMean())
 	case PixelTypeInt8:
-		sumValue := int8(0)
-		for _, value := range img.pixels.([]int8) {
-			sumValue += value
-		}
-		return sumValue / int8(len(img.pixels.([]int8)))
+		return int8(img.ExactMean())
 	case PixelTypeUInt16:
-		sumValue := uint16(0)
-		for _, value := range img.pixels.([]uint16) {
-			sumValue += value
-		}
-		return sumValue / uint16(len(img.pixels.([]uint16)))
+		return uint16(img.ExactMean())
 	case PixelTypeInt16:
-		sumValue := int16(0)
-		for _, value := range img.pixels.([]int16) {
-			sumValue += value
-		}
-		return sumValue / int16(len(img.pixels.([]int16)))
+		return int16(img.ExactMean())
 	case PixelTypeUInt32:
-		sumValue := uint32(0)
-		for _, value := range img.pixels.([]uint32) {
-			sumValue += value
-		}
-		return sumValue / uint32(len(img.pixels.([]uint32)))
+		return uint32(img.ExactMean())
 	case PixelTypeInt32:
-		sumValue := int32(0)
-		for _, value := range img.pixels.([]int32) {
-			sumValue += value
-		}
-		return sumValue / int32(len(img.pixels.([]int32)))
+		return int32(img.ExactMean())
 	case PixelTypeUInt64:
-		sumValue := uint64(0)
-		for _, value := range img.pixels.([]uint64) {
-			sumValue += value
-		}
-		return sumValue / uint64(len(img.pixels.([]uint64)))
+		return uint64(img.ExactMean())
 	case PixelTypeInt64:
-		sumValue := int64(0)
-		for _, value := range img.pixels.([]int64) {
-			sumValue += value
-		}
-		return sumValue / int64(len(img.pixels.([]int64)))
+		return int64(img.ExactMean())
 	case PixelTypeFloat32:
-		sumValue := float32(0)
-		for _, value := range img.pixels.([]float32) {
-			sumValue += value
-		}
-		return sumValue / float32(len(img.pixels.([]float32)))
+		return float32(img.ExactMean())
 	case PixelTypeFloat64:
-		sumValue := float64(0)
-		for _, value := range img.pixels.([]float64) {
-			sumValue += value
-		}
-		return sumValue / float64(len(img.pixels.([]float64)))
+		return img.ExactMean()
 	default:
 		return nil
 	}
@@ -476,67 +418,85 @@ func (img *Image) Mean() any {
 // Returns:
 //   - float64: The median of the image.
 func (img *Image) Median() float64 {
+	pixelData := make([]byte, len(img.pixels))
+	copy(pixelData, img.pixels)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		sort.Slice(img.pixels.([]uint8), func(i, j int) bool { return img.pixels.([]uint8)[i] < img.pixels.([]uint8)[j] })
-		if len(img.pixels.([]uint8))%2 == 0 {
-			return float64(img.pixels.([]uint8)[len(img.pixels.([]uint8))/2-1]+img.pixels.([]uint8)[len(img.pixels.([]uint8))/2]) / 2
+		sort.Slice(pixelData, func(i, j int) bool { return uint8(pixelData[i]) < uint8(pixelData[j]) })
+		if len(pixelData)%2 == 0 {
+			return float64(pixelData[len(pixelData)/2-1]+pixelData[len(pixelData)/2]) / 2
 		}
-		return float64(img.pixels.([]uint8)[len(img.pixels.([]uint8))/2])
+		return float64(uint8(pixelData[len(pixelData)/2]))
 	case PixelTypeInt8:
-		sort.Slice(img.pixels.([]int8), func(i, j int) bool { return img.pixels.([]int8)[i] < img.pixels.([]int8)[j] })
-		if len(img.pixels.([]int8))%2 == 0 {
-			return float64(img.pixels.([]int8)[len(img.pixels.([]int8))/2-1]+img.pixels.([]int8)[len(img.pixels.([]int8))/2]) / 2
+		sort.Slice(pixelData, func(i, j int) bool { return int8(pixelData[i]) < int8(pixelData[j]) })
+		if len(pixelData)%2 == 0 {
+			return float64(pixelData[len(pixelData)/2-1]+pixelData[len(pixelData)/2]) / 2
 		}
-		return float64(img.pixels.([]int8)[len(img.pixels.([]int8))/2])
+		return float64(int8(pixelData[len(pixelData)/2]))
 	case PixelTypeUInt16:
-		sort.Slice(img.pixels.([]uint16), func(i, j int) bool { return img.pixels.([]uint16)[i] < img.pixels.([]uint16)[j] })
-		if len(img.pixels.([]uint16))%2 == 0 {
-			return float64(img.pixels.([]uint16)[len(img.pixels.([]uint16))/2-1]+img.pixels.([]uint16)[len(img.pixels.([]uint16))/2]) / 2
+		sort.Slice(pixelData, func(i, j int) bool {
+			return binary.LittleEndian.Uint16(pixelData[i*2:i*2+2]) < binary.LittleEndian.Uint16(pixelData[j*2:j*2+2])
+		})
+		if len(pixelData)%2 == 0 {
+			return float64(binary.LittleEndian.Uint16(pixelData[len(pixelData)/2*2-2:len(pixelData)/2*2])+binary.LittleEndian.Uint16(pixelData[len(pixelData)/2*2:len(pixelData)/2*2+2])) / 2
 		}
-		return float64(img.pixels.([]uint16)[len(img.pixels.([]uint16))/2])
+		return float64(binary.LittleEndian.Uint16(pixelData[len(pixelData)/2*2 : len(pixelData)/2*2+2]))
 	case PixelTypeInt16:
-		sort.Slice(img.pixels.([]int16), func(i, j int) bool { return img.pixels.([]int16)[i] < img.pixels.([]int16)[j] })
-		if len(img.pixels.([]int16))%2 == 0 {
-			return float64(img.pixels.([]int16)[len(img.pixels.([]int16))/2-1]+img.pixels.([]int16)[len(img.pixels.([]int16))/2]) / 2
+		sort.Slice(pixelData, func(i, j int) bool {
+			return int16(binary.LittleEndian.Uint16(pixelData[i*2:i*2+2])) < int16(binary.LittleEndian.Uint16(pixelData[j*2:j*2+2]))
+		})
+		if len(pixelData)%2 == 0 {
+			return float64(int16(binary.LittleEndian.Uint16(pixelData[len(pixelData)/2*2-2:len(pixelData)/2*2]))+int16(binary.LittleEndian.Uint16(pixelData[len(pixelData)/2*2:len(pixelData)/2*2+2]))) / 2
 		}
-		return float64(img.pixels.([]int16)[len(img.pixels.([]int16))/2])
+		return float64(int16(binary.LittleEndian.Uint16(pixelData[len(pixelData)/2*2 : len(pixelData)/2*2+2])))
 	case PixelTypeUInt32:
-		sort.Slice(img.pixels.([]uint32), func(i, j int) bool { return img.pixels.([]uint32)[i] < img.pixels.([]uint32)[j] })
-		if len(img.pixels.([]uint32))%2 == 0 {
-			return float64(img.pixels.([]uint32)[len(img.pixels.([]uint32))/2-1]+img.pixels.([]uint32)[len(img.pixels.([]uint32))/2]) / 2
+		sort.Slice(pixelData, func(i, j int) bool {
+			return binary.LittleEndian.Uint32(pixelData[i*4:i*4+4]) < binary.LittleEndian.Uint32(pixelData[j*4:j*4+4])
+		})
+		if len(pixelData)%2 == 0 {
+			return float64(binary.LittleEndian.Uint32(pixelData[len(pixelData)/2*4-4:len(pixelData)/2*4])+binary.LittleEndian.Uint32(pixelData[len(pixelData)/2*4:len(pixelData)/2*4+4])) / 2
 		}
-		return float64(img.pixels.([]uint32)[len(img.pixels.([]uint32))/2])
+		return float64(binary.LittleEndian.Uint32(pixelData[len(pixelData)/2*4 : len(pixelData)/2*4+4]))
 	case PixelTypeInt32:
-		sort.Slice(img.pixels.([]int32), func(i, j int) bool { return img.pixels.([]int32)[i] < img.pixels.([]int32)[j] })
-		if len(img.pixels.([]int32))%2 == 0 {
-			return float64(img.pixels.([]int32)[len(img.pixels.([]int32))/2-1]+img.pixels.([]int32)[len(img.pixels.([]int32))/2]) / 2
+		sort.Slice(pixelData, func(i, j int) bool {
+			return int32(binary.LittleEndian.Uint32(pixelData[i*4:i*4+4])) < int32(binary.LittleEndian.Uint32(pixelData[j*4:j*4+4]))
+		})
+		if len(pixelData)%2 == 0 {
+			return float64(int32(binary.LittleEndian.Uint32(pixelData[len(pixelData)/2*4-4:len(pixelData)/2*4]))+int32(binary.LittleEndian.Uint32(pixelData[len(pixelData)/2*4:len(pixelData)/2*4+4]))) / 2
 		}
-		return float64(img.pixels.([]int32)[len(img.pixels.([]int32))/2])
+		return float64(int32(binary.LittleEndian.Uint32(pixelData[len(pixelData)/2*4 : len(pixelData)/2*4+4])))
 	case PixelTypeUInt64:
-		sort.Slice(img.pixels.([]uint64), func(i, j int) bool { return img.pixels.([]uint64)[i] < img.pixels.([]uint64)[j] })
-		if len(img.pixels.([]uint64))%2 == 0 {
-			return float64(img.pixels.([]uint64)[len(img.pixels.([]uint64))/2-1]+img.pixels.([]uint64)[len(img.pixels.([]uint64))/2]) / 2
+		sort.Slice(pixelData, func(i, j int) bool {
+			return binary.LittleEndian.Uint64(pixelData[i*8:i*8+8]) < binary.LittleEndian.Uint64(pixelData[j*8:j*8+8])
+		})
+		if len(pixelData)%2 == 0 {
+			return float64(binary.LittleEndian.Uint64(pixelData[len(pixelData)/2*8-8:len(pixelData)/2*8])+binary.LittleEndian.Uint64(pixelData[len(pixelData)/2*8:len(pixelData)/2*8+8])) / 2
 		}
-		return float64(img.pixels.([]uint64)[len(img.pixels.([]uint64))/2])
+		return float64(binary.LittleEndian.Uint64(pixelData[len(pixelData)/2*8 : len(pixelData)/2*8+8]))
 	case PixelTypeInt64:
-		sort.Slice(img.pixels.([]int64), func(i, j int) bool { return img.pixels.([]int64)[i] < img.pixels.([]int64)[j] })
-		if len(img.pixels.([]int64))%2 == 0 {
-			return float64(img.pixels.([]int64)[len(img.pixels.([]int64))/2-1]+img.pixels.([]int64)[len(img.pixels.([]int64))/2]) / 2
+		sort.Slice(pixelData, func(i, j int) bool {
+			return int64(binary.LittleEndian.Uint64(pixelData[i*8:i*8+8])) < int64(binary.LittleEndian.Uint64(pixelData[j*8:j*8+8]))
+		})
+		if len(pixelData)%2 == 0 {
+			return float64(int64(binary.LittleEndian.Uint64(pixelData[len(pixelData)/2*8-8:len(pixelData)/2*8]))+int64(binary.LittleEndian.Uint64(pixelData[len(pixelData)/2*8:len(pixelData)/2*8+8]))) / 2
 		}
-		return float64(img.pixels.([]int64)[len(img.pixels.([]int64))/2])
+		return float64(int64(binary.LittleEndian.Uint64(pixelData[len(pixelData)/2*8 : len(pixelData)/2*8+8])))
 	case PixelTypeFloat32:
-		sort.Slice(img.pixels.([]float32), func(i, j int) bool { return img.pixels.([]float32)[i] < img.pixels.([]float32)[j] })
-		if len(img.pixels.([]float32))%2 == 0 {
-			return float64(img.pixels.([]float32)[len(img.pixels.([]float32))/2-1]+img.pixels.([]float32)[len(img.pixels.([]float32))/2]) / 2
+		sort.Slice(pixelData, func(i, j int) bool {
+			return math.Float32frombits(binary.LittleEndian.Uint32(pixelData[i*4:i*4+4])) < math.Float32frombits(binary.LittleEndian.Uint32(pixelData[j*4:j*4+4]))
+		})
+		if len(pixelData)%2 == 0 {
+			return float64(math.Float32frombits(binary.LittleEndian.Uint32(pixelData[len(pixelData)/2*4-4:len(pixelData)/2*4]))+math.Float32frombits(binary.LittleEndian.Uint32(pixelData[len(pixelData)/2*4:len(pixelData)/2*4+4]))) / 2
 		}
-		return float64(img.pixels.([]float32)[len(img.pixels.([]float32))/2])
+		return float64(math.Float32frombits(binary.LittleEndian.Uint32(pixelData[len(pixelData)/2*4 : len(pixelData)/2*4+4])))
 	case PixelTypeFloat64:
-		sort.Slice(img.pixels.([]float64), func(i, j int) bool { return img.pixels.([]float64)[i] < img.pixels.([]float64)[j] })
-		if len(img.pixels.([]float64))%2 == 0 {
-			return (img.pixels.([]float64)[len(img.pixels.([]float64))/2-1] + img.pixels.([]float64)[len(img.pixels.([]float64))/2]) / 2
+		sort.Slice(pixelData, func(i, j int) bool {
+			return math.Float64frombits(binary.LittleEndian.Uint64(pixelData[i*8:i*8+8])) < math.Float64frombits(binary.LittleEndian.Uint64(pixelData[j*8:j*8+8]))
+		})
+		if len(pixelData)%2 == 0 {
+			return float64(math.Float64frombits(binary.LittleEndian.Uint64(pixelData[len(pixelData)/2*8-8:len(pixelData)/2*8]))+math.Float64frombits(binary.LittleEndian.Uint64(pixelData[len(pixelData)/2*8:len(pixelData)/2*8+8]))) / 2
 		}
-		return float64(img.pixels.([]float64)[len(img.pixels.([]float64))/2])
+		return float64(math.Float64frombits(binary.LittleEndian.Uint64(pixelData[len(pixelData)/2*8 : len(pixelData)/2*8+8])))
 	default:
 		return 0
 	}
@@ -551,83 +511,83 @@ func (img *Image) Std() any {
 	case PixelTypeUInt8:
 		meanValue := img.ExactMean()
 		sumValue := 0.0
-		for _, v := range img.pixels.([]uint8) {
-			value := float64(v)
+		for i := 0; i < len(img.pixels); i++ {
+			value := float64(uint8(img.pixels[i]))
 			sumValue += (value - meanValue) * (value - meanValue)
 		}
-		return math.Sqrt(sumValue / float64(len(img.pixels.([]uint8))))
+		return math.Sqrt(sumValue / float64(len(img.pixels)))
 	case PixelTypeInt8:
 		meanValue := img.ExactMean()
 		sumValue := 0.0
-		for _, v := range img.pixels.([]int8) {
-			value := float64(v)
+		for i := 0; i < len(img.pixels); i++ {
+			value := float64(int8(img.pixels[i]))
 			sumValue += (value - meanValue) * (value - meanValue)
 		}
-		return math.Sqrt(sumValue / float64(len(img.pixels.([]int8))))
+		return math.Sqrt(sumValue / float64(len(img.pixels)))
 	case PixelTypeUInt16:
 		meanValue := img.ExactMean()
 		sumValue := 0.0
-		for _, v := range img.pixels.([]uint16) {
-			value := float64(v)
-			sumValue += float64(value-meanValue) * float64(value-meanValue)
+		for i := 0; i < len(img.pixels)/2; i++ {
+			value := float64(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2]))
+			sumValue += (value - meanValue) * (value - meanValue)
 		}
-		return math.Sqrt(float64(sumValue) / float64(len(img.pixels.([]uint16))))
+		return math.Sqrt(float64(sumValue) / float64(len(img.pixels)/2))
 	case PixelTypeInt16:
 		meanValue := img.ExactMean()
 		sumValue := 0.0
-		for _, v := range img.pixels.([]int16) {
-			value := float64(v)
-			sumValue += float64(value-meanValue) * float64(value-meanValue)
+		for i := 0; i < len(img.pixels)/2; i++ {
+			value := float64(int16(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2])))
+			sumValue += (value - meanValue) * (value - meanValue)
 		}
-		return math.Sqrt(float64(sumValue) / float64(len(img.pixels.([]int16))))
+		return math.Sqrt(float64(sumValue) / float64(len(img.pixels)/2))
 	case PixelTypeUInt32:
 		meanValue := img.ExactMean()
 		sumValue := 0.0
-		for _, v := range img.pixels.([]uint32) {
-			value := float64(v)
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := float64(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))
 			sumValue += (value - meanValue) * (value - meanValue)
 		}
-		return math.Sqrt(sumValue / float64(len(img.pixels.([]uint32))))
+		return math.Sqrt(sumValue / float64(len(img.pixels)/4))
 	case PixelTypeInt32:
 		meanValue := img.ExactMean()
 		sumValue := 0.0
-		for _, v := range img.pixels.([]int32) {
-			value := float64(v)
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := float64(int32(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4])))
 			sumValue += (value - meanValue) * (value - meanValue)
 		}
-		return math.Sqrt(sumValue / float64(len(img.pixels.([]int32))))
+		return math.Sqrt(sumValue / float64(len(img.pixels)/4))
 	case PixelTypeUInt64:
 		meanValue := img.ExactMean()
 		sumValue := 0.0
-		for _, v := range img.pixels.([]uint64) {
-			value := float64(v)
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := float64(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))
 			sumValue += (value - meanValue) * (value - meanValue)
 		}
-		return math.Sqrt(sumValue / float64(len(img.pixels.([]uint64))))
+		return math.Sqrt(sumValue / float64(len(img.pixels)/8))
 	case PixelTypeInt64:
 		meanValue := img.ExactMean()
 		sumValue := 0.0
-		for _, v := range img.pixels.([]int64) {
-			value := float64(v)
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := float64(int64(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8])))
 			sumValue += (value - meanValue) * (value - meanValue)
 		}
-		return math.Sqrt(sumValue / float64(len(img.pixels.([]int64))))
+		return math.Sqrt(sumValue / float64(len(img.pixels)/8))
 	case PixelTypeFloat32:
 		meanValue := img.ExactMean()
 		sumValue := 0.0
-		for _, v := range img.pixels.([]float32) {
-			value := float64(v)
-			sumValue += (value - meanValue) * (value - meanValue)
+		for i := 0; i < len(img.pixels)/4; i++ {
+			value := math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))
+			sumValue += (float64(value) - meanValue) * (float64(value) - meanValue)
 		}
-		return math.Sqrt(sumValue / float64(len(img.pixels.([]float32))))
+		return math.Sqrt(sumValue / float64(len(img.pixels)/4))
 	case PixelTypeFloat64:
 		meanValue := img.ExactMean()
 		sumValue := 0.0
-		for _, v := range img.pixels.([]float64) {
-			value := float64(v)
+		for i := 0; i < len(img.pixels)/8; i++ {
+			value := math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))
 			sumValue += (value - meanValue) * (value - meanValue)
 		}
-		return math.Sqrt(sumValue / float64(len(img.pixels.([]float64))))
+		return math.Sqrt(sumValue / float64(len(img.pixels)/8))
 	default:
 		return nil
 	}
@@ -640,126 +600,124 @@ func (img *Image) Std() any {
 // Returns:
 //   - float64: The percentile value.
 func (img *Image) Percentile(p float64) float64 {
+	pixelData := make([]byte, len(img.pixels))
+	copy(pixelData, img.pixels)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		pixelData := make([]uint8, len(img.pixels.([]uint8)))
-		copy(pixelData, img.pixels.([]uint8))
-		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		sort.Slice(pixelData, func(i, j int) bool { return uint8(pixelData[i]) < uint8(pixelData[j]) })
 		indexFloat := p * float64(len(pixelData)-1)
 		index := int(indexFloat)
 		if indexFloat == float64(index) {
-			return float64(img.pixels.([]uint8)[index])
+			return float64(uint8(pixelData[index]))
 		}
-		value := float64(img.pixels.([]uint8)[index])
-		nextValue := float64(img.pixels.([]uint8)[index+1])
+		value := float64(uint8(img.pixels[index]))
+		nextValue := float64(uint8(img.pixels[index+1]))
 		return value + (indexFloat-float64(index))*(nextValue-value)
 	case PixelTypeInt8:
-		pixelData := make([]int8, len(img.pixels.([]int8)))
-		copy(pixelData, img.pixels.([]int8))
-		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		sort.Slice(pixelData, func(i, j int) bool { return int8(pixelData[i]) < int8(pixelData[j]) })
 		indexFloat := p * float64(len(pixelData)-1)
 		index := int(indexFloat)
 		if indexFloat == float64(index) {
-			return float64(img.pixels.([]int8)[index])
+			return float64(int8(pixelData[index]))
 		}
-		value := float64(img.pixels.([]int8)[index])
-		nextValue := float64(img.pixels.([]int8)[index+1])
+		value := float64(int8(pixelData[index]))
+		nextValue := float64(int8(pixelData[index+1]))
 		return value + (indexFloat-float64(index))*(nextValue-value)
 	case PixelTypeUInt16:
-		pixelData := make([]uint16, len(img.pixels.([]uint16)))
-		copy(pixelData, img.pixels.([]uint16))
-		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		sort.Slice(pixelData, func(i, j int) bool {
+			return binary.LittleEndian.Uint16(pixelData[i*2:i*2+2]) < binary.LittleEndian.Uint16(pixelData[j*2:j*2+2])
+		})
 		indexFloat := p * float64(len(pixelData)-1)
 		index := int(indexFloat)
 		if indexFloat == float64(index) {
-			return float64(img.pixels.([]uint16)[index])
+			return float64(binary.LittleEndian.Uint16(pixelData[index*2 : index*2+2]))
 		}
-		value := float64(img.pixels.([]uint16)[index])
-		nextValue := float64(img.pixels.([]uint16)[index+1])
+		value := float64(binary.LittleEndian.Uint16(pixelData[index*2 : index*2+2]))
+		nextValue := float64(binary.LittleEndian.Uint16(pixelData[(index+1)*2 : (index+1)*2+2]))
 		return value + (indexFloat-float64(index))*(nextValue-value)
 	case PixelTypeInt16:
-		pixelData := make([]int16, len(img.pixels.([]int16)))
-		copy(pixelData, img.pixels.([]int16))
-		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		sort.Slice(pixelData, func(i, j int) bool {
+			return int16(binary.LittleEndian.Uint16(pixelData[i*2:i*2+2])) < int16(binary.LittleEndian.Uint16(pixelData[j*2:j*2+2]))
+		})
 		indexFloat := p * float64(len(pixelData)-1)
 		index := int(indexFloat)
 		if indexFloat == float64(index) {
-			return float64(img.pixels.([]int16)[index])
+			return float64(int16(binary.LittleEndian.Uint16(pixelData[index*2 : index*2+2])))
 		}
-		value := float64(img.pixels.([]int16)[index])
-		nextValue := float64(img.pixels.([]int16)[index+1])
+		value := float64(int16(binary.LittleEndian.Uint16(pixelData[index*2 : index*2+2])))
+		nextValue := float64(int16(binary.LittleEndian.Uint16(pixelData[(index+1)*2 : (index+1)*2+2])))
 		return value + (indexFloat-float64(index))*(nextValue-value)
 	case PixelTypeUInt32:
-		pixelData := make([]uint32, len(img.pixels.([]uint32)))
-		copy(pixelData, img.pixels.([]uint32))
-		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		sort.Slice(pixelData, func(i, j int) bool {
+			return binary.LittleEndian.Uint32(pixelData[i*4:i*4+4]) < binary.LittleEndian.Uint32(pixelData[j*4:j*4+4])
+		})
 		indexFloat := p * float64(len(pixelData)-1)
 		index := int(indexFloat)
 		if indexFloat == float64(index) {
-			return float64(img.pixels.([]uint32)[index])
+			return float64(binary.LittleEndian.Uint32(pixelData[index*4 : index*4+4]))
 		}
-		value := float64(img.pixels.([]uint32)[index])
-		nextValue := float64(img.pixels.([]uint32)[index+1])
+		value := float64(binary.LittleEndian.Uint32(pixelData[index*4 : index*4+4]))
+		nextValue := float64(binary.LittleEndian.Uint32(pixelData[(index+1)*4 : (index+1)*4+4]))
 		return value + (indexFloat-float64(index))*(nextValue-value)
 	case PixelTypeInt32:
-		pixelData := make([]int32, len(img.pixels.([]int32)))
-		copy(pixelData, img.pixels.([]int32))
-		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		sort.Slice(pixelData, func(i, j int) bool {
+			return int32(binary.LittleEndian.Uint32(pixelData[i*4:i*4+4])) < int32(binary.LittleEndian.Uint32(pixelData[j*4:j*4+4]))
+		})
 		indexFloat := p * float64(len(pixelData)-1)
 		index := int(indexFloat)
 		if indexFloat == float64(index) {
-			return float64(img.pixels.([]int32)[index])
+			return float64(int32(binary.LittleEndian.Uint32(pixelData[index*4 : index*4+4])))
 		}
-		value := float64(img.pixels.([]int32)[index])
-		nextValue := float64(img.pixels.([]int32)[index+1])
+		value := float64(int32(binary.LittleEndian.Uint32(pixelData[index*4 : index*4+4])))
+		nextValue := float64(int32(binary.LittleEndian.Uint32(pixelData[(index+1)*4 : (index+1)*4+4])))
 		return value + (indexFloat-float64(index))*(nextValue-value)
 	case PixelTypeUInt64:
-		pixelData := make([]uint64, len(img.pixels.([]uint64)))
-		copy(pixelData, img.pixels.([]uint64))
-		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		sort.Slice(pixelData, func(i, j int) bool {
+			return binary.LittleEndian.Uint64(pixelData[i*8:i*8+8]) < binary.LittleEndian.Uint64(pixelData[j*8:j*8+8])
+		})
 		indexFloat := p * float64(len(pixelData)-1)
 		index := int(indexFloat)
 		if indexFloat == float64(index) {
-			return float64(img.pixels.([]uint64)[index])
+			return float64(binary.LittleEndian.Uint64(pixelData[index*8 : index*8+8]))
 		}
-		value := float64(img.pixels.([]uint64)[index])
-		nextValue := float64(img.pixels.([]uint64)[index+1])
+		value := float64(binary.LittleEndian.Uint64(pixelData[index*8 : index*8+8]))
+		nextValue := float64(binary.LittleEndian.Uint64(pixelData[(index+1)*8 : (index+1)*8+8]))
 		return value + (indexFloat-float64(index))*(nextValue-value)
 	case PixelTypeInt64:
-		pixelData := make([]int64, len(img.pixels.([]int64)))
-		copy(pixelData, img.pixels.([]int64))
-		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		sort.Slice(pixelData, func(i, j int) bool {
+			return int64(binary.LittleEndian.Uint64(pixelData[i*8:i*8+8])) < int64(binary.LittleEndian.Uint64(pixelData[j*8:j*8+8]))
+		})
 		indexFloat := p * float64(len(pixelData)-1)
 		index := int(indexFloat)
 		if indexFloat == float64(index) {
-			return float64(img.pixels.([]int64)[index])
+			return float64(int64(binary.LittleEndian.Uint64(pixelData[index*8 : index*8+8])))
 		}
-		value := float64(img.pixels.([]int64)[index])
-		nextValue := float64(img.pixels.([]int64)[index+1])
+		value := float64(int64(binary.LittleEndian.Uint64(pixelData[index*8 : index*8+8])))
+		nextValue := float64(int64(binary.LittleEndian.Uint64(pixelData[(index+1)*8 : (index+1)*8+8])))
 		return value + (indexFloat-float64(index))*(nextValue-value)
 	case PixelTypeFloat32:
-		pixelData := make([]float32, len(img.pixels.([]float32)))
-		copy(pixelData, img.pixels.([]float32))
-		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		sort.Slice(pixelData, func(i, j int) bool {
+			return math.Float32frombits(binary.LittleEndian.Uint32(pixelData[i*4:i*4+4])) < math.Float32frombits(binary.LittleEndian.Uint32(pixelData[j*4:j*4+4]))
+		})
 		indexFloat := p * float64(len(pixelData)-1)
 		index := int(indexFloat)
 		if indexFloat == float64(index) {
-			return float64(img.pixels.([]float32)[index])
+			return float64(math.Float32frombits(binary.LittleEndian.Uint32(pixelData[index*4 : index*4+4])))
 		}
-		value := float64(img.pixels.([]float32)[index])
-		nextValue := float64(img.pixels.([]float32)[index+1])
+		value := float64(math.Float32frombits(binary.LittleEndian.Uint32(pixelData[index*4 : index*4+4])))
+		nextValue := float64(math.Float32frombits(binary.LittleEndian.Uint32(pixelData[(index+1)*4 : (index+1)*4+4])))
 		return value + (indexFloat-float64(index))*(nextValue-value)
 	case PixelTypeFloat64:
-		pixelData := make([]float64, len(img.pixels.([]float64)))
-		copy(pixelData, img.pixels.([]float64))
-		sort.Slice(pixelData, func(i, j int) bool { return pixelData[i] < pixelData[j] })
+		sort.Slice(pixelData, func(i, j int) bool {
+			return math.Float64frombits(binary.LittleEndian.Uint64(pixelData[i*8:i*8+8])) < math.Float64frombits(binary.LittleEndian.Uint64(pixelData[j*8:j*8+8]))
+		})
 		indexFloat := p * float64(len(pixelData)-1)
 		index := int(indexFloat)
 		if indexFloat == float64(index) {
-			return float64(img.pixels.([]float64)[index])
+			return float64(math.Float64frombits(binary.LittleEndian.Uint64(pixelData[index*8 : index*8+8])))
 		}
-		value := float64(img.pixels.([]float64)[index])
-		nextValue := float64(img.pixels.([]float64)[index+1])
+		value := float64(math.Float64frombits(binary.LittleEndian.Uint64(pixelData[index*8 : index*8+8])))
+		nextValue := float64(math.Float64frombits(binary.LittleEndian.Uint64(pixelData[(index+2)*8 : (index+1)*8+8])))
 		return value + (indexFloat-float64(index))*(nextValue-value)
 	default:
 		return 0

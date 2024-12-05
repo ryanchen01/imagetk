@@ -1,6 +1,8 @@
 package imagetk
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"reflect"
 )
@@ -345,6 +347,105 @@ func flatten(data interface{}, elemType *reflect.Type) []reflect.Value {
 	return flat
 }
 
+func flattenToBytes(data interface{}) ([]byte, error) {
+	var bytesSlice []byte
+	var helper func(interface{}) error
+	helper = func(d interface{}) error {
+		val := reflect.ValueOf(d)
+		switch val.Kind() {
+		case reflect.Slice:
+			for i := 0; i < val.Len(); i++ {
+				helper(val.Index(i).Interface())
+			}
+		case reflect.Uint8:
+			buf := new(bytes.Buffer)
+			v := uint8(val.Uint())
+			err := binary.Write(buf, binary.LittleEndian, v)
+			if err != nil {
+				panic(err)
+			}
+			bytesSlice = append(bytesSlice, buf.Bytes()...)
+		case reflect.Int8:
+			buf := new(bytes.Buffer)
+			v := int8(val.Int())
+			err := binary.Write(buf, binary.LittleEndian, v)
+			if err != nil {
+				panic(err)
+			}
+			bytesSlice = append(bytesSlice, buf.Bytes()...)
+		case reflect.Uint16:
+			buf := new(bytes.Buffer)
+			v := uint16(val.Uint())
+			err := binary.Write(buf, binary.LittleEndian, v)
+			if err != nil {
+				panic(err)
+			}
+			bytesSlice = append(bytesSlice, buf.Bytes()...)
+		case reflect.Int16:
+			buf := new(bytes.Buffer)
+			v := int16(val.Int())
+			err := binary.Write(buf, binary.LittleEndian, v)
+			if err != nil {
+				panic(err)
+			}
+			bytesSlice = append(bytesSlice, buf.Bytes()...)
+		case reflect.Uint32:
+			buf := new(bytes.Buffer)
+			v := uint32(val.Uint())
+			err := binary.Write(buf, binary.LittleEndian, v)
+			if err != nil {
+				panic(err)
+			}
+			bytesSlice = append(bytesSlice, buf.Bytes()...)
+		case reflect.Int32:
+			buf := new(bytes.Buffer)
+			v := int32(val.Int())
+			err := binary.Write(buf, binary.LittleEndian, v)
+			if err != nil {
+				panic(err)
+			}
+			bytesSlice = append(bytesSlice, buf.Bytes()...)
+		case reflect.Uint64:
+			buf := new(bytes.Buffer)
+			v := uint64(val.Uint())
+			err := binary.Write(buf, binary.LittleEndian, v)
+			if err != nil {
+				panic(err)
+			}
+			bytesSlice = append(bytesSlice, buf.Bytes()...)
+		case reflect.Int64:
+			buf := new(bytes.Buffer)
+			v := int64(val.Int())
+			err := binary.Write(buf, binary.LittleEndian, v)
+			if err != nil {
+				panic(err)
+			}
+			bytesSlice = append(bytesSlice, buf.Bytes()...)
+		case reflect.Float32:
+			buf := new(bytes.Buffer)
+			v := float32(val.Float()) // float32
+			err := binary.Write(buf, binary.LittleEndian, v)
+			if err != nil {
+				panic(err)
+			}
+			bytesSlice = append(bytesSlice, buf.Bytes()...)
+		case reflect.Float64:
+			buf := new(bytes.Buffer)
+			v := float64(val.Float()) // float64
+			err := binary.Write(buf, binary.LittleEndian, v)
+			if err != nil {
+				panic(err)
+			}
+			bytesSlice = append(bytesSlice, buf.Bytes()...)
+		default:
+			return fmt.Errorf("unsupported value type")
+		}
+		return nil
+	}
+	err := helper(data)
+	return bytesSlice, err
+}
+
 // Reshape reshapes an n-dimensional nested slice into the specified shape.
 func reshape(data interface{}, shape []uint32) any {
 	if data == nil {
@@ -369,4 +470,82 @@ func reshape(data interface{}, shape []uint32) any {
 	reshaped := buildNestedSlice(flatData, shape, elemType)
 
 	return reshaped.Interface()
+}
+
+func getValueAsBytes(value any) ([]byte, error) {
+	switch value := value.(type) {
+	case uint8:
+		buf := new(bytes.Buffer)
+		err := binary.Write(buf, binary.LittleEndian, value)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes(), nil
+	case int8:
+		buf := new(bytes.Buffer)
+		err := binary.Write(buf, binary.LittleEndian, value)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes(), nil
+	case uint16:
+		buf := new(bytes.Buffer)
+		err := binary.Write(buf, binary.LittleEndian, value)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes(), nil
+	case int16:
+		buf := new(bytes.Buffer)
+		err := binary.Write(buf, binary.LittleEndian, value)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes(), nil
+	case uint32:
+		buf := new(bytes.Buffer)
+		err := binary.Write(buf, binary.LittleEndian, value)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes(), nil
+	case int32:
+		buf := new(bytes.Buffer)
+		err := binary.Write(buf, binary.LittleEndian, value)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes(), nil
+	case uint64:
+		buf := new(bytes.Buffer)
+		err := binary.Write(buf, binary.LittleEndian, value)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes(), nil
+	case int64:
+		buf := new(bytes.Buffer)
+		err := binary.Write(buf, binary.LittleEndian, value)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes(), nil
+	case float32:
+		buf := new(bytes.Buffer)
+		err := binary.Write(buf, binary.LittleEndian, value)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes(), nil
+	case float64:
+		buf := new(bytes.Buffer)
+		err := binary.Write(buf, binary.LittleEndian, value)
+		if err != nil {
+			panic(err)
+		}
+		return buf.Bytes(), nil
+	default:
+		return nil, fmt.Errorf("unsupported value type")
+	}
+
 }

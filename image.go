@@ -2,7 +2,9 @@
 package imagetk
 
 import (
+	"encoding/binary"
 	"fmt"
+	"math"
 	"reflect"
 	"runtime"
 	"sync"
@@ -37,7 +39,7 @@ const (
 // dimensions, size, spacing, origin, and direction.
 //
 // Fields:
-//   - pixels: The pixel data of the image, type can vary.
+//   - pixels: The pixel data of the image in an array of bytes.
 //   - pixelType: An integer representing the type of pixels.
 //   - dimension: The number of dimensions of the image (2<=N<=3).
 //   - size: A slice of uint32 representing the size of the image in each dimension (2<=N<=3).
@@ -45,13 +47,14 @@ const (
 //   - origin: A slice of float64 representing the origin of the image.
 //   - direction: An array of 9 float64 values representing the direction cosines of the image.
 type Image struct {
-	pixels    any
-	pixelType int
-	dimension uint32
-	size      []uint32
-	spacing   []float64
-	origin    []float64
-	direction [9]float64
+	pixels        []byte
+	pixelType     int
+	bytesPerPixel int
+	dimension     uint32
+	size          []uint32
+	spacing       []float64
+	origin        []float64
+	direction     [9]float64
 }
 
 // NewImage creates a new Image with the specified size and pixel type.
@@ -86,31 +89,23 @@ func NewImage(size []uint32, pixelType int) (*Image, error) {
 		}
 		numPixels *= int(s)
 	}
-	var pixels any
+
+	var pixels []byte
+	var bytesPerPixel int
 	switch pixelType {
-	case PixelTypeUInt8:
-		pixels = make([]uint8, numPixels)
-	case PixelTypeInt8:
-		pixels = make([]int8, numPixels)
-	case PixelTypeUInt16:
-		pixels = make([]uint16, numPixels)
-	case PixelTypeInt16:
-		pixels = make([]int16, numPixels)
-	case PixelTypeUInt32:
-		pixels = make([]uint32, numPixels)
-	case PixelTypeInt32:
-		pixels = make([]int32, numPixels)
-	case PixelTypeUInt64:
-		pixels = make([]uint64, numPixels)
-	case PixelTypeInt64:
-		pixels = make([]int64, numPixels)
-	case PixelTypeFloat32:
-		pixels = make([]float32, numPixels)
-	case PixelTypeFloat64:
-		pixels = make([]float64, numPixels)
+	case PixelTypeUInt8, PixelTypeInt8:
+		bytesPerPixel = 1
+	case PixelTypeUInt16, PixelTypeInt16:
+		bytesPerPixel = 2
+	case PixelTypeUInt32, PixelTypeInt32, PixelTypeFloat32:
+		bytesPerPixel = 4
+	case PixelTypeUInt64, PixelTypeInt64, PixelTypeFloat64:
+		bytesPerPixel = 8
 	default:
 		return nil, fmt.Errorf("unsupported pixel type: %d", pixelType)
 	}
+
+	pixels = make([]byte, numPixels*bytesPerPixel)
 
 	spacing := make([]float64, len(size))
 	origin := make([]float64, len(size))
@@ -122,13 +117,14 @@ func NewImage(size []uint32, pixelType int) (*Image, error) {
 	direction := [9]float64{1, 0, 0, 0, 1, 0, 0, 0, 1}
 
 	return &Image{
-		pixels:    pixels,
-		pixelType: pixelType,
-		dimension: uint32(len(size)),
-		size:      size,
-		spacing:   spacing,
-		origin:    origin,
-		direction: direction,
+		pixels:        pixels,
+		pixelType:     pixelType,
+		bytesPerPixel: bytesPerPixel,
+		dimension:     uint32(len(size)),
+		size:          size,
+		spacing:       spacing,
+		origin:        origin,
+		direction:     direction,
 	}, nil
 }
 
@@ -573,25 +569,35 @@ func (img *Image) GetPixel(index []uint32) (any, error) {
 	}
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		return img.pixels.([]uint8)[idx], nil
+		value := uint8(img.pixels[idx])
+		return value, nil
 	case PixelTypeInt8:
-		return img.pixels.([]int8)[idx], nil
+		value := int8(img.pixels[idx])
+		return value, nil
 	case PixelTypeUInt16:
-		return img.pixels.([]uint16)[idx], nil
+		value := binary.LittleEndian.Uint16(img.pixels[idx*2 : idx*2+2])
+		return value, nil
 	case PixelTypeInt16:
-		return img.pixels.([]int16)[idx], nil
+		value := int16(binary.LittleEndian.Uint16(img.pixels[idx*2 : idx*2+2]))
+		return value, nil
 	case PixelTypeUInt32:
-		return img.pixels.([]uint32)[idx], nil
+		value := binary.LittleEndian.Uint32(img.pixels[idx*4 : idx*4+4])
+		return value, nil
 	case PixelTypeInt32:
-		return img.pixels.([]int32)[idx], nil
+		value := int32(binary.LittleEndian.Uint32(img.pixels[idx*4 : idx*4+4]))
+		return value, nil
 	case PixelTypeUInt64:
-		return img.pixels.([]uint64)[idx], nil
+		value := binary.LittleEndian.Uint64(img.pixels[idx*8 : idx*8+8])
+		return value, nil
 	case PixelTypeInt64:
-		return img.pixels.([]int64)[idx], nil
+		value := int64(binary.LittleEndian.Uint64(img.pixels[idx*8 : idx*8+8]))
+		return value, nil
 	case PixelTypeFloat32:
-		return img.pixels.([]float32)[idx], nil
+		value := math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[idx*4 : idx*4+4]))
+		return value, nil
 	case PixelTypeFloat64:
-		return img.pixels.([]float64)[idx], nil
+		value := math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[idx*8 : idx*8+8]))
+		return value, nil
 	default:
 		return nil, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
@@ -605,34 +611,28 @@ func (img *Image) GetPixel(index []uint32) (any, error) {
 //   - uint8: The pixel value as a uint8.
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt8(index []uint32) (uint8, error) {
-	idx := uint32(0)
-	for i := len(index) - 1; i >= 0; i-- {
-		if index[i] >= img.size[i] {
-			return 0, fmt.Errorf("index out of range: %d", index[i])
-		}
-		idx = idx*img.size[i] + index[i]
-	}
+	value, err := img.GetPixel(index)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		return img.pixels.([]uint8)[idx], nil
+		return value.(uint8), err
 	case PixelTypeInt8:
-		return uint8(img.pixels.([]int8)[idx]), nil
+		return uint8(value.(int8)), err
 	case PixelTypeUInt16:
-		return uint8(img.pixels.([]uint16)[idx]), nil
+		return uint8(value.(uint16)), err
 	case PixelTypeInt16:
-		return uint8(img.pixels.([]int16)[idx]), nil
+		return uint8(value.(int16)), err
 	case PixelTypeUInt32:
-		return uint8(img.pixels.([]uint32)[idx]), nil
+		return uint8(value.(uint32)), err
 	case PixelTypeInt32:
-		return uint8(img.pixels.([]int32)[idx]), nil
+		return uint8(value.(int32)), err
 	case PixelTypeUInt64:
-		return uint8(img.pixels.([]uint64)[idx]), nil
+		return uint8(value.(uint64)), err
 	case PixelTypeInt64:
-		return uint8(img.pixels.([]int64)[idx]), nil
+		return uint8(value.(int64)), err
 	case PixelTypeFloat32:
-		return uint8(img.pixels.([]float32)[idx]), nil
+		return uint8(value.(float32)), err
 	case PixelTypeFloat64:
-		return uint8(img.pixels.([]float64)[idx]), nil
+		return uint8(value.(float64)), err
 	default:
 		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
@@ -646,34 +646,28 @@ func (img *Image) GetPixelAsUInt8(index []uint32) (uint8, error) {
 //   - int8: The pixel value as a int8.
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt8(index []uint32) (int8, error) {
-	idx := uint32(0)
-	for i := len(index) - 1; i >= 0; i-- {
-		if index[i] >= img.size[i] {
-			return 0, fmt.Errorf("index out of range: %d", index[i])
-		}
-		idx = idx*img.size[i] + index[i]
-	}
+	value, err := img.GetPixel(index)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		return int8(img.pixels.([]uint8)[idx]), nil
+		return int8(value.(uint8)), err
 	case PixelTypeInt8:
-		return img.pixels.([]int8)[idx], nil
+		return value.(int8), err
 	case PixelTypeUInt16:
-		return int8(img.pixels.([]uint16)[idx]), nil
+		return int8(value.(uint16)), err
 	case PixelTypeInt16:
-		return int8(img.pixels.([]int16)[idx]), nil
+		return int8(value.(int16)), err
 	case PixelTypeUInt32:
-		return int8(img.pixels.([]uint32)[idx]), nil
+		return int8(value.(uint32)), err
 	case PixelTypeInt32:
-		return int8(img.pixels.([]int32)[idx]), nil
+		return int8(value.(int32)), err
 	case PixelTypeUInt64:
-		return int8(img.pixels.([]uint64)[idx]), nil
+		return int8(value.(uint64)), err
 	case PixelTypeInt64:
-		return int8(img.pixels.([]int64)[idx]), nil
+		return int8(value.(int64)), err
 	case PixelTypeFloat32:
-		return int8(img.pixels.([]float32)[idx]), nil
+		return int8(value.(float32)), err
 	case PixelTypeFloat64:
-		return int8(img.pixels.([]float64)[idx]), nil
+		return int8(value.(float64)), err
 	default:
 		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
@@ -687,34 +681,28 @@ func (img *Image) GetPixelAsInt8(index []uint32) (int8, error) {
 //   - uint16: The pixel value as a uint16.
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt16(index []uint32) (uint16, error) {
-	idx := uint32(0)
-	for i := len(index) - 1; i >= 0; i-- {
-		if index[i] >= img.size[i] {
-			return 0, fmt.Errorf("index out of range: %d", index[i])
-		}
-		idx = idx*img.size[i] + index[i]
-	}
+	value, err := img.GetPixel(index)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		return uint16(img.pixels.([]uint8)[idx]), nil
+		return uint16(value.(uint8)), err
 	case PixelTypeInt8:
-		return uint16(img.pixels.([]int8)[idx]), nil
+		return uint16(value.(int8)), err
 	case PixelTypeUInt16:
-		return img.pixels.([]uint16)[idx], nil
+		return value.(uint16), err
 	case PixelTypeInt16:
-		return uint16(img.pixels.([]int16)[idx]), nil
+		return uint16(value.(int16)), err
 	case PixelTypeUInt32:
-		return uint16(img.pixels.([]uint32)[idx]), nil
+		return uint16(value.(uint32)), err
 	case PixelTypeInt32:
-		return uint16(img.pixels.([]int32)[idx]), nil
+		return uint16(value.(int32)), err
 	case PixelTypeUInt64:
-		return uint16(img.pixels.([]uint64)[idx]), nil
+		return uint16(value.(uint64)), err
 	case PixelTypeInt64:
-		return uint16(img.pixels.([]int64)[idx]), nil
+		return uint16(value.(int64)), err
 	case PixelTypeFloat32:
-		return uint16(img.pixels.([]float32)[idx]), nil
+		return uint16(value.(float32)), err
 	case PixelTypeFloat64:
-		return uint16(img.pixels.([]float64)[idx]), nil
+		return uint16(value.(float64)), err
 	default:
 		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
@@ -728,34 +716,28 @@ func (img *Image) GetPixelAsUInt16(index []uint32) (uint16, error) {
 //   - int16: The pixel value as a int16.
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt16(index []uint32) (int16, error) {
-	idx := uint32(0)
-	for i := len(index) - 1; i >= 0; i-- {
-		if index[i] >= img.size[i] {
-			return 0, fmt.Errorf("index out of range: %d", index[i])
-		}
-		idx = idx*img.size[i] + index[i]
-	}
+	value, err := img.GetPixel(index)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		return int16(img.pixels.([]uint8)[idx]), nil
+		return int16(value.(uint8)), err
 	case PixelTypeInt8:
-		return int16(img.pixels.([]int8)[idx]), nil
+		return int16(value.(int8)), err
 	case PixelTypeUInt16:
-		return int16(img.pixels.([]uint16)[idx]), nil
+		return int16(value.(uint16)), err
 	case PixelTypeInt16:
-		return img.pixels.([]int16)[idx], nil
+		return value.(int16), err
 	case PixelTypeUInt32:
-		return int16(img.pixels.([]uint32)[idx]), nil
+		return int16(value.(uint32)), err
 	case PixelTypeInt32:
-		return int16(img.pixels.([]int32)[idx]), nil
+		return int16(value.(int32)), err
 	case PixelTypeUInt64:
-		return int16(img.pixels.([]uint64)[idx]), nil
+		return int16(value.(uint64)), err
 	case PixelTypeInt64:
-		return int16(img.pixels.([]int64)[idx]), nil
+		return int16(value.(int64)), err
 	case PixelTypeFloat32:
-		return int16(img.pixels.([]float32)[idx]), nil
+		return int16(value.(float32)), err
 	case PixelTypeFloat64:
-		return int16(img.pixels.([]float64)[idx]), nil
+		return int16(value.(float64)), err
 	default:
 		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
@@ -769,34 +751,28 @@ func (img *Image) GetPixelAsInt16(index []uint32) (int16, error) {
 //   - uint32: The pixel value as a uint32.
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt32(index []uint32) (uint32, error) {
-	idx := uint32(0)
-	for i := len(index) - 1; i >= 0; i-- {
-		if index[i] >= img.size[i] {
-			return 0, fmt.Errorf("index out of range: %d", index[i])
-		}
-		idx = idx*img.size[i] + index[i]
-	}
+	value, err := img.GetPixel(index)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		return uint32(img.pixels.([]uint8)[idx]), nil
+		return uint32(value.(uint8)), err
 	case PixelTypeInt8:
-		return uint32(img.pixels.([]int8)[idx]), nil
+		return uint32(value.(int8)), err
 	case PixelTypeUInt16:
-		return uint32(img.pixels.([]uint16)[idx]), nil
+		return uint32(value.(uint16)), err
 	case PixelTypeInt16:
-		return uint32(img.pixels.([]int16)[idx]), nil
+		return uint32(value.(int16)), err
 	case PixelTypeUInt32:
-		return img.pixels.([]uint32)[idx], nil
+		return value.(uint32), err
 	case PixelTypeInt32:
-		return uint32(img.pixels.([]int32)[idx]), nil
+		return uint32(value.(int32)), err
 	case PixelTypeUInt64:
-		return uint32(img.pixels.([]uint64)[idx]), nil
+		return uint32(value.(uint64)), err
 	case PixelTypeInt64:
-		return uint32(img.pixels.([]int64)[idx]), nil
+		return uint32(value.(int64)), err
 	case PixelTypeFloat32:
-		return uint32(img.pixels.([]float32)[idx]), nil
+		return uint32(value.(float32)), err
 	case PixelTypeFloat64:
-		return uint32(img.pixels.([]float64)[idx]), nil
+		return uint32(value.(float64)), err
 	default:
 		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
@@ -810,34 +786,28 @@ func (img *Image) GetPixelAsUInt32(index []uint32) (uint32, error) {
 //   - int32: The pixel value as a int32.
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt32(index []uint32) (int32, error) {
-	idx := uint32(0)
-	for i := len(index) - 1; i >= 0; i-- {
-		if index[i] >= img.size[i] {
-			return 0, fmt.Errorf("index out of range: %d", index[i])
-		}
-		idx = idx*img.size[i] + index[i]
-	}
+	value, err := img.GetPixel(index)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		return int32(img.pixels.([]uint8)[idx]), nil
+		return int32(value.(uint8)), err
 	case PixelTypeInt8:
-		return int32(img.pixels.([]int8)[idx]), nil
+		return int32(value.(int8)), err
 	case PixelTypeUInt16:
-		return int32(img.pixels.([]uint16)[idx]), nil
+		return int32(value.(uint16)), err
 	case PixelTypeInt16:
-		return int32(img.pixels.([]int16)[idx]), nil
+		return int32(value.(int16)), err
 	case PixelTypeUInt32:
-		return int32(img.pixels.([]uint32)[idx]), nil
+		return int32(value.(uint32)), err
 	case PixelTypeInt32:
-		return img.pixels.([]int32)[idx], nil
+		return value.(int32), err
 	case PixelTypeUInt64:
-		return int32(img.pixels.([]uint64)[idx]), nil
+		return int32(value.(uint64)), err
 	case PixelTypeInt64:
-		return int32(img.pixels.([]int64)[idx]), nil
+		return int32(value.(int64)), err
 	case PixelTypeFloat32:
-		return int32(img.pixels.([]float32)[idx]), nil
+		return int32(value.(float32)), err
 	case PixelTypeFloat64:
-		return int32(img.pixels.([]float64)[idx]), nil
+		return int32(value.(float64)), err
 	default:
 		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
@@ -851,34 +821,28 @@ func (img *Image) GetPixelAsInt32(index []uint32) (int32, error) {
 //   - uint64: The pixel value as a uint64.
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt64(index []uint32) (uint64, error) {
-	idx := uint32(0)
-	for i := len(index) - 1; i >= 0; i-- {
-		if index[i] >= img.size[i] {
-			return 0, fmt.Errorf("index out of range: %d", index[i])
-		}
-		idx = idx*img.size[i] + index[i]
-	}
+	value, err := img.GetPixel(index)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		return uint64(img.pixels.([]uint8)[idx]), nil
+		return uint64(value.(uint8)), err
 	case PixelTypeInt8:
-		return uint64(img.pixels.([]int8)[idx]), nil
+		return uint64(value.(int8)), err
 	case PixelTypeUInt16:
-		return uint64(img.pixels.([]uint16)[idx]), nil
+		return uint64(value.(uint16)), err
 	case PixelTypeInt16:
-		return uint64(img.pixels.([]int16)[idx]), nil
+		return uint64(value.(int16)), err
 	case PixelTypeUInt32:
-		return uint64(img.pixels.([]uint32)[idx]), nil
+		return uint64(value.(uint32)), err
 	case PixelTypeInt32:
-		return uint64(img.pixels.([]int32)[idx]), nil
+		return uint64(value.(int32)), err
 	case PixelTypeUInt64:
-		return img.pixels.([]uint64)[idx], nil
+		return value.(uint64), err
 	case PixelTypeInt64:
-		return uint64(img.pixels.([]int64)[idx]), nil
+		return uint64(value.(int64)), err
 	case PixelTypeFloat32:
-		return uint64(img.pixels.([]float32)[idx]), nil
+		return uint64(value.(float32)), err
 	case PixelTypeFloat64:
-		return uint64(img.pixels.([]float64)[idx]), nil
+		return uint64(value.(float64)), err
 	default:
 		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
@@ -892,34 +856,28 @@ func (img *Image) GetPixelAsUInt64(index []uint32) (uint64, error) {
 //   - int64: The pixel value as a int64.
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt64(index []uint32) (int64, error) {
-	idx := uint32(0)
-	for i := len(index) - 1; i >= 0; i-- {
-		if index[i] >= img.size[i] {
-			return 0, fmt.Errorf("index out of range: %d", index[i])
-		}
-		idx = idx*img.size[i] + index[i]
-	}
+	value, err := img.GetPixel(index)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		return int64(img.pixels.([]uint8)[idx]), nil
+		return int64(value.(uint8)), err
 	case PixelTypeInt8:
-		return int64(img.pixels.([]int8)[idx]), nil
+		return int64(value.(int8)), err
 	case PixelTypeUInt16:
-		return int64(img.pixels.([]uint16)[idx]), nil
+		return int64(value.(uint16)), err
 	case PixelTypeInt16:
-		return int64(img.pixels.([]int16)[idx]), nil
+		return int64(value.(int16)), err
 	case PixelTypeUInt32:
-		return int64(img.pixels.([]uint32)[idx]), nil
+		return int64(value.(uint32)), err
 	case PixelTypeInt32:
-		return int64(img.pixels.([]int32)[idx]), nil
+		return int64(value.(int32)), err
 	case PixelTypeUInt64:
-		return int64(img.pixels.([]uint64)[idx]), nil
+		return int64(value.(uint64)), err
 	case PixelTypeInt64:
-		return img.pixels.([]int64)[idx], nil
+		return value.(int64), err
 	case PixelTypeFloat32:
-		return int64(img.pixels.([]float32)[idx]), nil
+		return int64(value.(float32)), err
 	case PixelTypeFloat64:
-		return int64(img.pixels.([]float64)[idx]), nil
+		return int64(value.(float64)), err
 	default:
 		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
@@ -933,34 +891,28 @@ func (img *Image) GetPixelAsInt64(index []uint32) (int64, error) {
 //   - float32: The pixel value as a float32.
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsFloat32(index []uint32) (float32, error) {
-	idx := uint32(0)
-	for i := len(index) - 1; i >= 0; i-- {
-		if index[i] >= img.size[i] {
-			return 0, fmt.Errorf("index out of range: %d", index[i])
-		}
-		idx = idx*img.size[i] + index[i]
-	}
+	value, err := img.GetPixel(index)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		return float32(img.pixels.([]uint8)[idx]), nil
+		return float32(value.(uint8)), err
 	case PixelTypeInt8:
-		return float32(img.pixels.([]int8)[idx]), nil
+		return float32(value.(int8)), err
 	case PixelTypeUInt16:
-		return float32(img.pixels.([]uint16)[idx]), nil
+		return float32(value.(uint16)), err
 	case PixelTypeInt16:
-		return float32(img.pixels.([]int16)[idx]), nil
+		return float32(value.(int16)), err
 	case PixelTypeUInt32:
-		return float32(img.pixels.([]uint32)[idx]), nil
+		return float32(value.(uint32)), err
 	case PixelTypeInt32:
-		return float32(img.pixels.([]int32)[idx]), nil
+		return float32(value.(int32)), err
 	case PixelTypeUInt64:
-		return float32(img.pixels.([]uint64)[idx]), nil
+		return float32(value.(uint64)), err
 	case PixelTypeInt64:
-		return float32(img.pixels.([]int64)[idx]), nil
+		return float32(value.(int64)), err
 	case PixelTypeFloat32:
-		return img.pixels.([]float32)[idx], nil
+		return value.(float32), err
 	case PixelTypeFloat64:
-		return float32(img.pixels.([]float64)[idx]), nil
+		return float32(value.(float64)), err
 	default:
 		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
@@ -974,34 +926,28 @@ func (img *Image) GetPixelAsFloat32(index []uint32) (float32, error) {
 //   - float64: The pixel value as a float64.
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsFloat64(index []uint32) (float64, error) {
-	idx := uint32(0)
-	for i := len(index) - 1; i >= 0; i-- {
-		if index[i] >= img.size[i] {
-			return 0, fmt.Errorf("index out of range: %d", index[i])
-		}
-		idx = idx*img.size[i] + index[i]
-	}
+	value, err := img.GetPixel(index)
 	switch img.pixelType {
 	case PixelTypeUInt8:
-		return float64(img.pixels.([]uint8)[idx]), nil
+		return float64(value.(uint8)), err
 	case PixelTypeInt8:
-		return float64(img.pixels.([]int8)[idx]), nil
+		return float64(value.(int8)), err
 	case PixelTypeUInt16:
-		return float64(img.pixels.([]uint16)[idx]), nil
+		return float64(value.(uint16)), err
 	case PixelTypeInt16:
-		return float64(img.pixels.([]int16)[idx]), nil
+		return float64(value.(int16)), err
 	case PixelTypeUInt32:
-		return float64(img.pixels.([]uint32)[idx]), nil
+		return float64(value.(uint32)), err
 	case PixelTypeInt32:
-		return float64(img.pixels.([]int32)[idx]), nil
+		return float64(value.(int32)), err
 	case PixelTypeUInt64:
-		return float64(img.pixels.([]uint64)[idx]), nil
+		return float64(value.(uint64)), err
 	case PixelTypeInt64:
-		return float64(img.pixels.([]int64)[idx]), nil
+		return float64(value.(int64)), err
 	case PixelTypeFloat32:
-		return float64(img.pixels.([]float32)[idx]), nil
+		return float64(value.(float32)), err
 	case PixelTypeFloat64:
-		return img.pixels.([]float64)[idx], nil
+		return value.(float64), err
 	default:
 		return -1, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
 	}
@@ -1055,377 +1001,308 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 	if chunkSize*numGoroutines < numPixels {
 		chunkSize += 1
 	}
-	wg := sync.WaitGroup{}
+
 	switch pixelType {
 	case PixelTypeUInt8:
-		newPixelData := make([]uint8, numPixels)
-		for chunk := 0; chunk < numGoroutines; chunk++ {
-			start := chunk * chunkSize
-			end := start + chunkSize
-			if end > numPixels {
-				end = numPixels
+		newPixelData := make([]byte, numPixels*1)
+		switch img.pixelType {
+		case PixelTypeUInt8:
+			newPixelData = img.pixels
+		case PixelTypeInt8:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(uint8(img.pixels[i]))
 			}
-			wg.Add(1)
-			go func(start, end int) {
-				defer wg.Done()
-				for i := start; i < end; i++ {
-					switch img.pixelType {
-					case PixelTypeInt8:
-						newPixelData[i] = uint8(img.pixels.([]int8)[i])
-					case PixelTypeUInt16:
-						newPixelData[i] = uint8(img.pixels.([]uint16)[i])
-					case PixelTypeInt16:
-						newPixelData[i] = uint8(img.pixels.([]int16)[i])
-					case PixelTypeUInt32:
-						newPixelData[i] = uint8(img.pixels.([]uint32)[i])
-					case PixelTypeInt32:
-						newPixelData[i] = uint8(img.pixels.([]int32)[i])
-					case PixelTypeUInt64:
-						newPixelData[i] = uint8(img.pixels.([]uint64)[i])
-					case PixelTypeInt64:
-						newPixelData[i] = uint8(img.pixels.([]int64)[i])
-					case PixelTypeFloat32:
-						newPixelData[i] = uint8(img.pixels.([]float32)[i])
-					case PixelTypeFloat64:
-						newPixelData[i] = uint8(img.pixels.([]float64)[i])
-					}
-				}
-			}(start, end)
+		case PixelTypeUInt16:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(uint8(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2])))
+			}
+		case PixelTypeInt16:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(uint8(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2])))
+			}
+		case PixelTypeUInt32:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(uint8(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4])))
+			}
+		case PixelTypeInt32:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(uint8(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4])))
+			}
+		case PixelTypeUInt64:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(uint8(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8])))
+			}
+		case PixelTypeInt64:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(uint8(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8])))
+			}
+		case PixelTypeFloat32:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(uint8(math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))))
+			}
+		case PixelTypeFloat64:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(uint8(math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))))
+			}
 		}
-		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeInt8:
-		newPixelData := make([]int8, numPixels)
-		for chunk := 0; chunk < numGoroutines; chunk++ {
-			start := chunk * chunkSize
-			end := start + chunkSize
-			if end > numPixels {
-				end = numPixels
+		newPixelData := make([]byte, numPixels*1)
+		switch img.pixelType {
+		case PixelTypeUInt8:
+			for i := 0; i < numPixels*1; i++ {
+				newPixelData[i] = byte(int8(img.pixels[i]))
 			}
-			wg.Add(1)
-			go func(start, end int) {
-				defer wg.Done()
-				for i := start; i < end; i++ {
-					switch img.pixelType {
-					case PixelTypeUInt8:
-						newPixelData[i] = int8(img.pixels.([]uint8)[i])
-					case PixelTypeUInt16:
-						newPixelData[i] = int8(img.pixels.([]uint16)[i])
-					case PixelTypeInt16:
-						newPixelData[i] = int8(img.pixels.([]int16)[i])
-					case PixelTypeUInt32:
-						newPixelData[i] = int8(img.pixels.([]uint32)[i])
-					case PixelTypeInt32:
-						newPixelData[i] = int8(img.pixels.([]int32)[i])
-					case PixelTypeUInt64:
-						newPixelData[i] = int8(img.pixels.([]uint64)[i])
-					case PixelTypeInt64:
-						newPixelData[i] = int8(img.pixels.([]int64)[i])
-					case PixelTypeFloat32:
-						newPixelData[i] = int8(img.pixels.([]float32)[i])
-					case PixelTypeFloat64:
-						newPixelData[i] = int8(img.pixels.([]float64)[i])
-					}
-				}
-			}(start, end)
+		case PixelTypeInt8:
+			newPixelData = img.pixels
+		case PixelTypeUInt16:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(int8(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2])))
+			}
+		case PixelTypeInt16:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(int8(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2])))
+			}
+		case PixelTypeUInt32:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(int8(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4])))
+			}
+		case PixelTypeInt32:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(int8(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4])))
+			}
+		case PixelTypeUInt64:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(int8(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8])))
+			}
+		case PixelTypeInt64:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(int8(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8])))
+			}
+		case PixelTypeFloat32:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(int8(math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))))
+			}
+		case PixelTypeFloat64:
+			for i := 0; i < numPixels; i++ {
+				newPixelData[i] = byte(int8(math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))))
+			}
 		}
-		wg.Wait()
 		newImg.pixels = newPixelData
-	case PixelTypeUInt16:
-		newPixelData := make([]uint16, numPixels)
-		for chunk := 0; chunk < numGoroutines; chunk++ {
-			start := chunk * chunkSize
-			end := start + chunkSize
-			if end > numPixels {
-				end = numPixels
+	case PixelTypeUInt16, PixelTypeInt16:
+		newPixelData := make([]byte, numPixels*2)
+		switch img.pixelType {
+		case PixelTypeUInt8:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(img.pixels[i]))
 			}
-			wg.Add(1)
-			go func(start, end int) {
-				defer wg.Done()
-				for i := start; i < end; i++ {
-					switch img.pixelType {
-					case PixelTypeUInt8:
-						newPixelData[i] = uint16(img.pixels.([]uint8)[i])
-					case PixelTypeInt8:
-						newPixelData[i] = uint16(img.pixels.([]int8)[i])
-					case PixelTypeInt16:
-						newPixelData[i] = uint16(img.pixels.([]int16)[i])
-					case PixelTypeUInt32:
-						newPixelData[i] = uint16(img.pixels.([]uint32)[i])
-					case PixelTypeInt32:
-						newPixelData[i] = uint16(img.pixels.([]int32)[i])
-					case PixelTypeUInt64:
-						newPixelData[i] = uint16(img.pixels.([]uint64)[i])
-					case PixelTypeInt64:
-						newPixelData[i] = uint16(img.pixels.([]int64)[i])
-					case PixelTypeFloat32:
-						newPixelData[i] = uint16(img.pixels.([]float32)[i])
-					case PixelTypeFloat64:
-						newPixelData[i] = uint16(img.pixels.([]float64)[i])
-					}
-				}
-			}(start, end)
+		case PixelTypeInt8:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(img.pixels[i]))
+			}
+		case PixelTypeUInt16:
+			newPixelData = img.pixels
+		case PixelTypeInt16:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2])))
+			}
+		case PixelTypeUInt32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4])))
+			}
+		case PixelTypeInt32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4])))
+			}
+		case PixelTypeUInt64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8])))
+			}
+		case PixelTypeInt64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8])))
+			}
+		case PixelTypeFloat32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4]))))
+			}
+		case PixelTypeFloat64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8]))))
+			}
 		}
-		wg.Wait()
 		newImg.pixels = newPixelData
-	case PixelTypeInt16:
-		newPixelData := make([]int16, numPixels)
-		for chunk := 0; chunk < numGoroutines; chunk++ {
-			start := chunk * chunkSize
-			end := start + chunkSize
-			if end > numPixels {
-				end = numPixels
+	case PixelTypeUInt32, PixelTypeInt32:
+		newPixelData := make([]byte, numPixels*4)
+		switch img.pixelType {
+		case PixelTypeUInt8:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], uint32(img.pixels[i]))
 			}
-			wg.Add(1)
-			go func(start, end int) {
-				defer wg.Done()
-				for i := start; i < end; i++ {
-					switch img.pixelType {
-					case PixelTypeUInt8:
-						newPixelData[i] = int16(img.pixels.([]uint8)[i])
-					case PixelTypeInt8:
-						newPixelData[i] = int16(img.pixels.([]int8)[i])
-					case PixelTypeUInt16:
-						newPixelData[i] = int16(img.pixels.([]uint16)[i])
-					case PixelTypeUInt32:
-						newPixelData[i] = int16(img.pixels.([]uint32)[i])
-					case PixelTypeInt32:
-						newPixelData[i] = int16(img.pixels.([]int32)[i])
-					case PixelTypeUInt64:
-						newPixelData[i] = int16(img.pixels.([]uint64)[i])
-					case PixelTypeInt64:
-						newPixelData[i] = int16(img.pixels.([]int64)[i])
-					case PixelTypeFloat32:
-						newPixelData[i] = int16(img.pixels.([]float32)[i])
-					case PixelTypeFloat64:
-						newPixelData[i] = int16(img.pixels.([]float64)[i])
-					}
-				}
-			}(start, end)
+		case PixelTypeInt8:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], uint32(img.pixels[i]))
+			}
+		case PixelTypeUInt16:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], uint32(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2])))
+			}
+		case PixelTypeInt16:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], uint32(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2])))
+			}
+		case PixelTypeUInt32:
+			newPixelData = img.pixels
+		case PixelTypeInt32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], uint32(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4])))
+			}
+		case PixelTypeUInt64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], uint32(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8])))
+			}
+		case PixelTypeInt64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], uint32(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8])))
+			}
+		case PixelTypeFloat32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], uint32(math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4]))))
+			}
+		case PixelTypeFloat64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], uint32(math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8]))))
+			}
 		}
-		wg.Wait()
 		newImg.pixels = newPixelData
-	case PixelTypeUInt32:
-		newPixelData := make([]uint32, numPixels)
-		for chunk := 0; chunk < numGoroutines; chunk++ {
-			start := chunk * chunkSize
-			end := start + chunkSize
-			if end > numPixels {
-				end = numPixels
+	case PixelTypeUInt64, PixelTypeInt64:
+		newPixelData := make([]byte, numPixels*8)
+		switch img.pixelType {
+		case PixelTypeUInt8:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], uint64(img.pixels[i]))
 			}
-			wg.Add(1)
-			go func(start, end int) {
-				defer wg.Done()
-				for i := start; i < end; i++ {
-					switch img.pixelType {
-					case PixelTypeUInt8:
-						newPixelData[i] = uint32(img.pixels.([]uint8)[i])
-					case PixelTypeInt8:
-						newPixelData[i] = uint32(img.pixels.([]int8)[i])
-					case PixelTypeUInt16:
-						newPixelData[i] = uint32(img.pixels.([]uint16)[i])
-					case PixelTypeInt16:
-						newPixelData[i] = uint32(img.pixels.([]int16)[i])
-					case PixelTypeInt32:
-						newPixelData[i] = uint32(img.pixels.([]int32)[i])
-					case PixelTypeUInt64:
-						newPixelData[i] = uint32(img.pixels.([]uint64)[i])
-					case PixelTypeInt64:
-						newPixelData[i] = uint32(img.pixels.([]int64)[i])
-					case PixelTypeFloat32:
-						newPixelData[i] = uint32(img.pixels.([]float32)[i])
-					case PixelTypeFloat64:
-						newPixelData[i] = uint32(img.pixels.([]float64)[i])
-					}
-				}
-			}(start, end)
-		}
-		wg.Wait()
-		newImg.pixels = newPixelData
-	case PixelTypeInt32:
-		newPixelData := make([]int32, numPixels)
-		for chunk := 0; chunk < numGoroutines; chunk++ {
-			start := chunk * chunkSize
-			end := start + chunkSize
-			if end > numPixels {
-				end = numPixels
+		case PixelTypeInt8:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], uint64(img.pixels[i]))
 			}
-			wg.Add(1)
-			go func(start, end int) {
-				defer wg.Done()
-				for i := start; i < end; i++ {
-					switch img.pixelType {
-					case PixelTypeUInt8:
-						newPixelData[i] = int32(img.pixels.([]uint8)[i])
-					case PixelTypeInt8:
-						newPixelData[i] = int32(img.pixels.([]int8)[i])
-					case PixelTypeUInt16:
-						newPixelData[i] = int32(img.pixels.([]uint16)[i])
-					case PixelTypeInt16:
-						newPixelData[i] = int32(img.pixels.([]int16)[i])
-					case PixelTypeUInt32:
-						newPixelData[i] = int32(img.pixels.([]uint32)[i])
-					case PixelTypeUInt64:
-						newPixelData[i] = int32(img.pixels.([]uint64)[i])
-					case PixelTypeInt64:
-						newPixelData[i] = int32(img.pixels.([]int64)[i])
-					case PixelTypeFloat32:
-						newPixelData[i] = int32(img.pixels.([]float32)[i])
-					case PixelTypeFloat64:
-						newPixelData[i] = int32(img.pixels.([]float64)[i])
-					}
-				}
-			}(start, end)
-		}
-		wg.Wait()
-		newImg.pixels = newPixelData
-	case PixelTypeUInt64:
-		newPixelData := make([]uint64, numPixels)
-		for chunk := 0; chunk < numGoroutines; chunk++ {
-			start := chunk * chunkSize
-			end := start + chunkSize
-			if end > numPixels {
-				end = numPixels
+		case PixelTypeUInt16:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], uint64(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2])))
 			}
-			wg.Add(1)
-			go func(start, end int) {
-				defer wg.Done()
-				for i := start; i < end; i++ {
-					switch img.pixelType {
-					case PixelTypeUInt8:
-						newPixelData[i] = uint64(img.pixels.([]uint8)[i])
-					case PixelTypeInt8:
-						newPixelData[i] = uint64(img.pixels.([]int8)[i])
-					case PixelTypeUInt16:
-						newPixelData[i] = uint64(img.pixels.([]uint16)[i])
-					case PixelTypeInt16:
-						newPixelData[i] = uint64(img.pixels.([]int16)[i])
-					case PixelTypeUInt32:
-						newPixelData[i] = uint64(img.pixels.([]uint32)[i])
-					case PixelTypeInt32:
-						newPixelData[i] = uint64(img.pixels.([]int32)[i])
-					case PixelTypeInt64:
-						newPixelData[i] = uint64(img.pixels.([]int64)[i])
-					case PixelTypeFloat32:
-						newPixelData[i] = uint64(img.pixels.([]float32)[i])
-					case PixelTypeFloat64:
-						newPixelData[i] = uint64(img.pixels.([]float64)[i])
-					}
-				}
-			}(start, end)
-		}
-		wg.Wait()
-		newImg.pixels = newPixelData
-	case PixelTypeInt64:
-		newPixelData := make([]int64, numPixels)
-		for chunk := 0; chunk < numGoroutines; chunk++ {
-			start := chunk * chunkSize
-			end := start + chunkSize
-			if end > numPixels {
-				end = numPixels
+		case PixelTypeInt16:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], uint64(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2])))
 			}
-			wg.Add(1)
-			go func(start, end int) {
-				defer wg.Done()
-				for i := start; i < end; i++ {
-					switch img.pixelType {
-					case PixelTypeUInt8:
-						newPixelData[i] = int64(img.pixels.([]uint8)[i])
-					case PixelTypeInt8:
-						newPixelData[i] = int64(img.pixels.([]int8)[i])
-					case PixelTypeUInt16:
-						newPixelData[i] = int64(img.pixels.([]uint16)[i])
-					case PixelTypeInt16:
-						newPixelData[i] = int64(img.pixels.([]int16)[i])
-					case PixelTypeUInt32:
-						newPixelData[i] = int64(img.pixels.([]uint32)[i])
-					case PixelTypeInt32:
-						newPixelData[i] = int64(img.pixels.([]int32)[i])
-					case PixelTypeUInt64:
-						newPixelData[i] = int64(img.pixels.([]uint64)[i])
-					case PixelTypeFloat32:
-						newPixelData[i] = int64(img.pixels.([]float32)[i])
-					case PixelTypeFloat64:
-						newPixelData[i] = int64(img.pixels.([]float64)[i])
-					}
-				}
-			}(start, end)
+		case PixelTypeUInt32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], uint64(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4])))
+			}
+		case PixelTypeInt32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], uint64(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4])))
+			}
+		case PixelTypeUInt64:
+			newPixelData = img.pixels
+		case PixelTypeInt64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], uint64(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8])))
+			}
+		case PixelTypeFloat32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], uint64(math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4]))))
+			}
+		case PixelTypeFloat64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], uint64(math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8]))))
+			}
 		}
-		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeFloat32:
-		newPixelData := make([]float32, numPixels)
-		for chunk := 0; chunk < numGoroutines; chunk++ {
-			start := chunk * chunkSize
-			end := start + chunkSize
-			if end > numPixels {
-				end = numPixels
+		newPixelData := make([]byte, numPixels*4)
+		switch img.pixelType {
+		case PixelTypeUInt8:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(img.pixels[i])))
 			}
-			wg.Add(1)
-			go func(start, end int) {
-				defer wg.Done()
-				for i := start; i < end; i++ {
-					switch img.pixelType {
-					case PixelTypeUInt8:
-						newPixelData[i] = float32(img.pixels.([]uint8)[i])
-					case PixelTypeInt8:
-						newPixelData[i] = float32(img.pixels.([]int8)[i])
-					case PixelTypeUInt16:
-						newPixelData[i] = float32(img.pixels.([]uint16)[i])
-					case PixelTypeInt16:
-						newPixelData[i] = float32(img.pixels.([]int16)[i])
-					case PixelTypeUInt32:
-						newPixelData[i] = float32(img.pixels.([]uint32)[i])
-					case PixelTypeInt32:
-						newPixelData[i] = float32(img.pixels.([]int32)[i])
-					case PixelTypeUInt64:
-						newPixelData[i] = float32(img.pixels.([]uint64)[i])
-					case PixelTypeInt64:
-						newPixelData[i] = float32(img.pixels.([]int64)[i])
-					case PixelTypeFloat64:
-						newPixelData[i] = float32(img.pixels.([]float64)[i])
-					}
-				}
-			}(start, end)
+		case PixelTypeInt8:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(img.pixels[i])))
+			}
+		case PixelTypeUInt16:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2]))))
+			}
+		case PixelTypeInt16:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2]))))
+			}
+		case PixelTypeUInt32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4]))))
+			}
+		case PixelTypeInt32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4]))))
+			}
+		case PixelTypeUInt64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8]))))
+			}
+		case PixelTypeInt64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8]))))
+			}
+		case PixelTypeFloat32:
+			newPixelData = img.pixels
+		case PixelTypeFloat64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8]))))
+			}
 		}
-		wg.Wait()
 		newImg.pixels = newPixelData
 	case PixelTypeFloat64:
-		newPixelData := make([]float64, numPixels)
-		for chunk := 0; chunk < numGoroutines; chunk++ {
-			start := chunk * chunkSize
-			end := start + chunkSize
-			if end > numPixels {
-				end = numPixels
+		newPixelData := make([]byte, numPixels*8)
+		switch img.pixelType {
+		case PixelTypeUInt8:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(img.pixels[i])))
 			}
-			wg.Add(1)
-			go func(start, end int) {
-				defer wg.Done()
-				for i := start; i < end; i++ {
-					switch img.pixelType {
-					case PixelTypeUInt8:
-						newPixelData[i] = float64(img.pixels.([]uint8)[i])
-					case PixelTypeInt8:
-						newPixelData[i] = float64(img.pixels.([]int8)[i])
-					case PixelTypeUInt16:
-						newPixelData[i] = float64(img.pixels.([]uint16)[i])
-					case PixelTypeInt16:
-						newPixelData[i] = float64(img.pixels.([]int16)[i])
-					case PixelTypeUInt32:
-						newPixelData[i] = float64(img.pixels.([]uint32)[i])
-					case PixelTypeInt32:
-						newPixelData[i] = float64(img.pixels.([]int32)[i])
-					case PixelTypeUInt64:
-						newPixelData[i] = float64(img.pixels.([]uint64)[i])
-					case PixelTypeInt64:
-						newPixelData[i] = float64(img.pixels.([]int64)[i])
-					case PixelTypeFloat32:
-						newPixelData[i] = float64(img.pixels.([]float32)[i])
-					}
-				}
-			}(start, end)
+		case PixelTypeInt8:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(img.pixels[i])))
+			}
+		case PixelTypeUInt16:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2]))))
+			}
+		case PixelTypeInt16:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2]))))
+			}
+		case PixelTypeUInt32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4]))))
+			}
+		case PixelTypeInt32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4]))))
+			}
+		case PixelTypeUInt64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8]))))
+			}
+		case PixelTypeInt64:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8]))))
+			}
+		case PixelTypeFloat32:
+			for i := 0; i < numPixels; i++ {
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4])))))
+			}
+		case PixelTypeFloat64:
+			newPixelData = img.pixels
 		}
-		wg.Wait()
 		newImg.pixels = newPixelData
 	default:
 		return nil, fmt.Errorf("unsupported pixel type: %d", pixelType)
@@ -1465,180 +1342,32 @@ func (img *Image) SetPixel(index []uint32, value any) error {
 		}
 		idx = idx*img.size[i] + index[i]
 	}
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		pixelValue, err := getValueAsPixelType(value, PixelTypeUInt8)
-		if err != nil {
-			return err
-		}
-		img.pixels.([]uint8)[idx] = pixelValue.(uint8)
-	case PixelTypeInt8:
-		pixelValue, err := getValueAsPixelType(value, PixelTypeInt8)
-		if err != nil {
-			return err
-		}
-		img.pixels.([]int8)[idx] = pixelValue.(int8)
-	case PixelTypeUInt16:
-		pixelValue, err := getValueAsPixelType(value, PixelTypeUInt16)
-		if err != nil {
-			return err
-		}
-		img.pixels.([]uint16)[idx] = pixelValue.(uint16)
-	case PixelTypeInt16:
-		pixelValue, err := getValueAsPixelType(value, PixelTypeInt16)
-		if err != nil {
-			return err
-		}
-		img.pixels.([]int16)[idx] = pixelValue.(int16)
-	case PixelTypeUInt32:
-		pixelValue, err := getValueAsPixelType(value, PixelTypeUInt32)
-		if err != nil {
-			return err
-		}
-		img.pixels.([]uint32)[idx] = pixelValue.(uint32)
-	case PixelTypeInt32:
-		pixelValue, err := getValueAsPixelType(value, PixelTypeInt32)
-		if err != nil {
-			return err
-		}
-		img.pixels.([]int32)[idx] = pixelValue.(int32)
-	case PixelTypeUInt64:
-		pixelValue, err := getValueAsPixelType(value, PixelTypeUInt64)
-		if err != nil {
-			return err
-		}
-		img.pixels.([]uint64)[idx] = pixelValue.(uint64)
-	case PixelTypeInt64:
-		pixelValue, err := getValueAsPixelType(value, PixelTypeInt64)
-		if err != nil {
-			return err
-		}
-		img.pixels.([]int64)[idx] = pixelValue.(int64)
-	case PixelTypeFloat32:
-		pixelValue, err := getValueAsPixelType(value, PixelTypeFloat32)
-		if err != nil {
-			return err
-		}
-		img.pixels.([]float32)[idx] = pixelValue.(float32)
-	case PixelTypeFloat64:
-		pixelValue, err := getValueAsPixelType(value, PixelTypeFloat64)
-		if err != nil {
-			return err
-		}
-		img.pixels.([]float64)[idx] = pixelValue.(float64)
-	default:
-		return fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	bytesPerPixel := img.bytesPerPixel
+
+	valueBytes, err := getValueAsBytes(value)
+	if err != nil {
+		return err
 	}
+	copy(img.pixels[idx*uint32(bytesPerPixel):idx*uint32(bytesPerPixel)+uint32(bytesPerPixel)], valueBytes)
+
 	return nil
 }
 
 func (img *Image) SetPixels(pixels any) error {
-	var elemType reflect.Type
-	flattened := flatten(pixels, &elemType)
-
+	flattened, err := flattenToBytes(pixels)
+	if err != nil {
+		return err
+	}
 	numPixels := 1
 	for _, s := range img.size {
 		numPixels *= int(s)
 	}
 
-	if len(flattened) != numPixels {
+	if len(flattened)/img.bytesPerPixel != numPixels {
 		return fmt.Errorf("invalid number of pixels, expected %d, got %d", numPixels, len(flattened))
 	}
 
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		if _, ok := flattened[0].Interface().(uint8); !ok {
-			return fmt.Errorf("invalid pixel type, expected uint8, got %T", flattened[0].Interface())
-		}
-		pixelsSlice := make([]uint8, numPixels)
-		for i := 0; i < len(flattened); i++ {
-			pixelsSlice[i] = flattened[i].Interface().(uint8)
-		}
-		img.pixels = pixelsSlice
-	case PixelTypeInt8:
-		if _, ok := flattened[0].Interface().(int8); !ok {
-			return fmt.Errorf("invalid pixel type, expected int8, got %T", flattened[0].Interface())
-		}
-		pixelsSlice := make([]int8, numPixels)
-		for i := 0; i < len(flattened); i++ {
-			pixelsSlice[i] = flattened[i].Interface().(int8)
-		}
-		img.pixels = pixelsSlice
-	case PixelTypeUInt16:
-		if _, ok := flattened[0].Interface().(uint16); !ok {
-			return fmt.Errorf("invalid pixel type, expected uint16, got %T", flattened[0].Interface())
-		}
-		pixelsSlice := make([]uint16, numPixels)
-		for i := 0; i < len(flattened); i++ {
-			pixelsSlice[i] = flattened[i].Interface().(uint16)
-		}
-		img.pixels = pixelsSlice
-	case PixelTypeInt16:
-		if _, ok := flattened[0].Interface().(int16); !ok {
-			return fmt.Errorf("invalid pixel type, expected int16, got %T", flattened[0].Interface())
-		}
-		pixelsSlice := make([]int16, numPixels)
-		for i := 0; i < len(flattened); i++ {
-			pixelsSlice[i] = flattened[i].Interface().(int16)
-		}
-		img.pixels = pixelsSlice
-	case PixelTypeUInt32:
-		if _, ok := flattened[0].Interface().(uint32); !ok {
-			return fmt.Errorf("invalid pixel type, expected uint32, got %T", flattened[0].Interface())
-		}
-		pixelsSlice := make([]uint32, numPixels)
-		for i := 0; i < len(flattened); i++ {
-			pixelsSlice[i] = flattened[i].Interface().(uint32)
-		}
-		img.pixels = pixelsSlice
-	case PixelTypeInt32:
-		if _, ok := flattened[0].Interface().(int32); !ok {
-			return fmt.Errorf("invalid pixel type, expected int32, got %T", flattened[0].Interface())
-		}
-		pixelsSlice := make([]int32, numPixels)
-		for i := 0; i < len(flattened); i++ {
-			pixelsSlice[i] = flattened[i].Interface().(int32)
-		}
-		img.pixels = pixelsSlice
-	case PixelTypeUInt64:
-		if _, ok := flattened[0].Interface().(uint64); !ok {
-			return fmt.Errorf("invalid pixel type, expected uint64, got %T", flattened[0].Interface())
-		}
-		pixelsSlice := make([]uint64, numPixels)
-		for i := 0; i < len(flattened); i++ {
-			pixelsSlice[i] = flattened[i].Interface().(uint64)
-		}
-		img.pixels = pixelsSlice
-	case PixelTypeInt64:
-		if _, ok := flattened[0].Interface().(int64); !ok {
-			return fmt.Errorf("invalid pixel type, expected int64, got %T", flattened[0].Interface())
-		}
-		pixelsSlice := make([]int64, numPixels)
-		for i := 0; i < len(flattened); i++ {
-			pixelsSlice[i] = flattened[i].Interface().(int64)
-		}
-		img.pixels = pixelsSlice
-	case PixelTypeFloat32:
-		if _, ok := flattened[0].Interface().(float32); !ok {
-			return fmt.Errorf("invalid pixel type, expected float32, got %T", flattened[0].Interface())
-		}
-		pixelsSlice := make([]float32, numPixels)
-		for i := 0; i < len(flattened); i++ {
-			pixelsSlice[i] = flattened[i].Interface().(float32)
-		}
-		img.pixels = pixelsSlice
-	case PixelTypeFloat64:
-		if _, ok := flattened[0].Interface().(float64); !ok {
-			return fmt.Errorf("invalid pixel type, expected float64, got %T", flattened[0].Interface())
-		}
-		pixelsSlice := make([]float64, numPixels)
-		for i := 0; i < len(flattened); i++ {
-			pixelsSlice[i] = flattened[i].Interface().(float64)
-		}
-		img.pixels = pixelsSlice
-	default:
-		return fmt.Errorf("unsupported pixel type: %d", img.pixelType)
-	}
+	img.pixels = flattened
 
 	return nil
 }
@@ -1648,29 +1377,9 @@ func (img *Image) SetSize(size []uint32) error {
 	for _, s := range size {
 		totalSize *= s
 	}
-	var numPixels int
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		numPixels = int(len(img.pixels.([]uint8)))
-	case PixelTypeInt8:
-		numPixels = int(len(img.pixels.([]int8)))
-	case PixelTypeUInt16:
-		numPixels = int(len(img.pixels.([]uint16)))
-	case PixelTypeInt16:
-		numPixels = int(len(img.pixels.([]int16)))
-	case PixelTypeUInt32:
-		numPixels = int(len(img.pixels.([]uint32)))
-	case PixelTypeInt32:
-		numPixels = int(len(img.pixels.([]int32)))
-	case PixelTypeUInt64:
-		numPixels = int(len(img.pixels.([]uint64)))
-	case PixelTypeInt64:
-		numPixels = int(len(img.pixels.([]int64)))
-	case PixelTypeFloat32:
-		numPixels = int(len(img.pixels.([]float32)))
-	case PixelTypeFloat64:
-		numPixels = int(len(img.pixels.([]float64)))
-	}
+
+	numPixels := len(img.pixels) / img.bytesPerPixel
+
 	if uint32(numPixels) != totalSize {
 		return fmt.Errorf("invalid number of pixels, expected %d, got %d", totalSize, numPixels)
 	}
