@@ -1,6 +1,7 @@
 package imagetk
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math"
 )
@@ -196,65 +197,35 @@ func (img *Image) GetPixelFromPoint(point []float64, fillType int) (float64, err
 		var pixelValue float64
 		switch img.pixelType {
 		case PixelTypeUInt8:
-			data, ok := img.pixels.([]uint8)
-			if !ok || linearIndex >= len(data) {
-				continue // Skip invalid data
-			}
-			pixelValue = float64(data[linearIndex])
+			value := img.pixels[linearIndex]
+			pixelValue = float64(uint8(value))
 		case PixelTypeInt8:
-			data, ok := img.pixels.([]int8)
-			if !ok || linearIndex >= len(data) {
-				continue
-			}
-			pixelValue = float64(data[linearIndex])
+			value := img.pixels[linearIndex]
+			pixelValue = float64(int8(value))
 		case PixelTypeUInt16:
-			data, ok := img.pixels.([]uint16)
-			if !ok || linearIndex >= len(data) {
-				continue
-			}
-			pixelValue = float64(data[linearIndex])
+			value := binary.LittleEndian.Uint16(img.pixels[linearIndex*2 : linearIndex*2+2])
+			pixelValue = float64(uint16(value))
 		case PixelTypeInt16:
-			data, ok := img.pixels.([]int16)
-			if !ok || linearIndex >= len(data) {
-				continue
-			}
-			pixelValue = float64(data[linearIndex])
+			value := binary.LittleEndian.Uint16(img.pixels[linearIndex*2 : linearIndex*2+2])
+			pixelValue = float64(int16(value))
 		case PixelTypeUInt32:
-			data, ok := img.pixels.([]uint32)
-			if !ok || linearIndex >= len(data) {
-				continue
-			}
-			pixelValue = float64(data[linearIndex])
+			value := binary.LittleEndian.Uint32(img.pixels[linearIndex*4 : linearIndex*4+4])
+			pixelValue = float64(uint32(value))
 		case PixelTypeInt32:
-			data, ok := img.pixels.([]int32)
-			if !ok || linearIndex >= len(data) {
-				continue
-			}
-			pixelValue = float64(data[linearIndex])
+			value := binary.LittleEndian.Uint32(img.pixels[linearIndex*4 : linearIndex*4+4])
+			pixelValue = float64(int32(value))
 		case PixelTypeUInt64:
-			data, ok := img.pixels.([]uint64)
-			if !ok || linearIndex >= len(data) {
-				continue
-			}
-			pixelValue = float64(data[linearIndex])
+			value := binary.LittleEndian.Uint64(img.pixels[linearIndex*8 : linearIndex*8+8])
+			pixelValue = float64(uint64(value))
 		case PixelTypeInt64:
-			data, ok := img.pixels.([]int64)
-			if !ok || linearIndex >= len(data) {
-				continue
-			}
-			pixelValue = float64(data[linearIndex])
+			value := binary.LittleEndian.Uint64(img.pixels[linearIndex*8 : linearIndex*8+8])
+			pixelValue = float64(int64(value))
 		case PixelTypeFloat32:
-			data, ok := img.pixels.([]float32)
-			if !ok || linearIndex >= len(data) {
-				continue
-			}
-			pixelValue = float64(data[linearIndex])
+			value := math.Float32frombits(binary.LittleEndian.Uint32(img.pixels[linearIndex*4 : linearIndex*4+4]))
+			pixelValue = float64(value)
 		case PixelTypeFloat64:
-			data, ok := img.pixels.([]float64)
-			if !ok || linearIndex >= len(data) {
-				continue
-			}
-			pixelValue = data[linearIndex]
+			value := math.Float64frombits(binary.LittleEndian.Uint64(img.pixels[linearIndex*8 : linearIndex*8+8]))
+			pixelValue = value
 		default:
 			return 0.0, fmt.Errorf("unsupported pixel type")
 		}

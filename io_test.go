@@ -46,7 +46,7 @@ func TestReadImage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create image: %v", err)
 	}
-	err = img.SetPixel([]uint32{0, 0}, 1)
+	err = img.SetPixel([]uint32{0, 0}, float32(1))
 	if err != nil {
 		t.Fatalf("failed to set pixel: %v", err)
 	}

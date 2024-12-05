@@ -58,27 +58,16 @@ func readImageTypeRaw(filename string, pixelType int) (*Image, error) {
 	// Determine pixel type based on file size and dimensions
 	var bytesPerPixel int
 	switch pixelType {
-	case PixelTypeUInt8:
+	case PixelTypeUInt8, PixelTypeInt8:
 		bytesPerPixel = 1
-	case PixelTypeInt8:
-		bytesPerPixel = 1
-	case PixelTypeUInt16:
+	case PixelTypeUInt16, PixelTypeInt16:
 		bytesPerPixel = 2
-	case PixelTypeInt16:
-		bytesPerPixel = 2
-	case PixelTypeUInt32:
+	case PixelTypeUInt32, PixelTypeInt32, PixelTypeFloat32:
 		bytesPerPixel = 4
-	case PixelTypeInt32:
-		bytesPerPixel = 4
-	case PixelTypeUInt64:
-		bytesPerPixel = 8
-	case PixelTypeInt64:
-		bytesPerPixel = 8
-	case PixelTypeFloat32:
-		bytesPerPixel = 4
-	case PixelTypeFloat64:
+	case PixelTypeUInt64, PixelTypeInt64, PixelTypeFloat64:
 		bytesPerPixel = 8
 	}
+
 	totalPixels := fileSize / int64(bytesPerPixel)
 
 	// Create a new image
@@ -90,43 +79,17 @@ func readImageTypeRaw(filename string, pixelType int) (*Image, error) {
 	xy := uint32(math.Pow(float64(totalPixels), 1.0/float64(img.dimension)))
 	z := uint32(totalPixels / int64(xy*xy))
 	img.size = []uint32{xy, xy, z}
+	img.bytesPerPixel = bytesPerPixel
+	img.pixelType = pixelType
 
 	img.spacing = []float64{1.0, 1.0, 1.0}
 	img.origin = []float64{0.0, 0.0, 0.0}
 	img.direction = [9]float64{1, 0, 0, 0, 1, 0, 0, 0, 1}
 
-	// Set pixel type based on bytes per pixel
-	switch bytesPerPixel {
-	case 1:
-		img.pixelType = PixelTypeUInt8
-		pixels := make([]uint8, totalPixels)
-		if err := binary.Read(file, binary.LittleEndian, pixels); err != nil {
-			return nil, err
-		}
-		img.pixels = pixels
-	case 2:
-		img.pixelType = PixelTypeUInt16
-		pixels := make([]uint16, totalPixels)
-		if err := binary.Read(file, binary.LittleEndian, pixels); err != nil {
-			return nil, err
-		}
-		img.pixels = pixels
-	case 4:
-		img.pixelType = PixelTypeFloat32
-		pixels := make([]float32, totalPixels)
-		if err := binary.Read(file, binary.LittleEndian, pixels); err != nil {
-			return nil, err
-		}
-		img.pixels = pixels
-	case 8:
-		img.pixelType = PixelTypeFloat64
-		pixels := make([]float64, totalPixels)
-		if err := binary.Read(file, binary.LittleEndian, pixels); err != nil {
-			return nil, err
-		}
-		img.pixels = pixels
-	default:
-		return nil, fmt.Errorf("unsupported bytes per pixel: %d", bytesPerPixel)
+	// Read the pixel data
+	img.pixels = make([]byte, fileSize)
+	if _, err := file.Read(img.pixels); err != nil {
+		return nil, err
 	}
 
 	return img, nil
@@ -275,50 +238,7 @@ func (img *Image) saveImageTypeRaw(filename string) error {
 		return err
 	}
 	defer outputFile.Close()
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		for i := 0; i < len(img.pixels.([]uint8)); i++ {
-			binary.Write(outputFile, binary.LittleEndian, img.pixels.([]uint8)[i])
-		}
-	case PixelTypeInt8:
-		for i := 0; i < len(img.pixels.([]int8)); i++ {
-			binary.Write(outputFile, binary.LittleEndian, img.pixels.([]int8)[i])
-		}
-	case PixelTypeUInt16:
-		for i := 0; i < len(img.pixels.([]uint16)); i++ {
-			binary.Write(outputFile, binary.LittleEndian, img.pixels.([]uint16)[i])
-		}
-	case PixelTypeInt16:
-		for i := 0; i < len(img.pixels.([]int16)); i++ {
-			binary.Write(outputFile, binary.LittleEndian, img.pixels.([]int16)[i])
-		}
-	case PixelTypeUInt32:
-		for i := 0; i < len(img.pixels.([]uint32)); i++ {
-			binary.Write(outputFile, binary.LittleEndian, img.pixels.([]uint32)[i])
-		}
-	case PixelTypeInt32:
-		for i := 0; i < len(img.pixels.([]int32)); i++ {
-			binary.Write(outputFile, binary.LittleEndian, img.pixels.([]int32)[i])
-		}
-	case PixelTypeUInt64:
-		for i := 0; i < len(img.pixels.([]uint64)); i++ {
-			binary.Write(outputFile, binary.LittleEndian, img.pixels.([]uint64)[i])
-		}
-	case PixelTypeInt64:
-		for i := 0; i < len(img.pixels.([]int64)); i++ {
-			binary.Write(outputFile, binary.LittleEndian, img.pixels.([]int64)[i])
-		}
-	case PixelTypeFloat32:
-		for i := 0; i < len(img.pixels.([]float32)); i++ {
-			binary.Write(outputFile, binary.LittleEndian, img.pixels.([]float32)[i])
-		}
-	case PixelTypeFloat64:
-		for i := 0; i < len(img.pixels.([]float64)); i++ {
-			binary.Write(outputFile, binary.LittleEndian, img.pixels.([]float64)[i])
-		}
-	default:
-		return fmt.Errorf("unknown pixel type")
-	}
+	binary.Write(outputFile, binary.LittleEndian, img.pixels)
 	return nil
 }
 
