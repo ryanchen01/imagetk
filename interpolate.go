@@ -88,10 +88,8 @@ func linearResample(img *Image, interpolator LinearInterpolator) (*Image, error)
 	}
 
 	numGoroutines := uint32(runtime.NumCPU())
-	chunkSize := uint32(numPixels) / numGoroutines
-	if chunkSize*numGoroutines < uint32(numPixels) {
-		chunkSize += 1
-	}
+	chunkSize := (uint32(numPixels) + numGoroutines - 1) / numGoroutines
+
 	wg := sync.WaitGroup{}
 	for chunk := uint32(0); chunk < numGoroutines; chunk++ {
 		start := chunk * chunkSize
@@ -187,10 +185,8 @@ func nearestResample(img *Image, interpolator NearestInterpolator) (*Image, erro
 	}
 
 	numGoroutines := uint32(runtime.NumCPU())
-	chunkSize := uint32(numPixels) / numGoroutines
-	if chunkSize*numGoroutines < uint32(numPixels) {
-		chunkSize += 1
-	}
+	chunkSize := (uint32(numPixels) + numGoroutines - 1) / numGoroutines
+
 	wg := sync.WaitGroup{}
 	for chunk := uint32(0); chunk < numGoroutines; chunk++ {
 		start := chunk * chunkSize

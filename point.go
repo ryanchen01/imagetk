@@ -57,10 +57,6 @@ func invert3x3(m [9]float64) ([9]float64, error) {
 //   - float64: The interpolated pixel value.
 //   - error: An error if the operation fails.
 func (img *Image) GetPixelFromPoint(point []float64, fillType int) (float64, error) {
-	if len(point) != int(img.dimension) {
-		return 0.0, fmt.Errorf("point dimension does not match image dimension")
-	}
-
 	// Step 1: Compute y = x - o
 	y := make([]float64, img.dimension)
 	for i := 0; i < int(img.dimension); i++ {
@@ -90,8 +86,6 @@ func (img *Image) GetPixelFromPoint(point []float64, fillType int) (float64, err
 			return 0.0, err
 		}
 		D_inv = inv[:]
-	} else {
-		return 0.0, fmt.Errorf("unsupported dimension: %d", img.dimension)
 	}
 
 	// Step 3: Compute p = D_inv * y
@@ -108,9 +102,6 @@ func (img *Image) GetPixelFromPoint(point []float64, fillType int) (float64, err
 	// Step 4: Compute i_float = p / s
 	i_float := make([]float64, img.dimension)
 	for i := 0; i < int(img.dimension); i++ {
-		if img.spacing[i] == 0 {
-			return 0.0, fmt.Errorf("spacing[%d] is zero", i)
-		}
 		i_float[i] = p[i] / img.spacing[i]
 	}
 
@@ -151,8 +142,6 @@ func (img *Image) GetPixelFromPoint(point []float64, fillType int) (float64, err
 			{indices: []int{i0[0], i1[1], i1[2]}, weight: (1 - weights[0]) * weights[1] * weights[2]},
 			{indices: []int{i1[0], i1[1], i1[2]}, weight: weights[0] * weights[1] * weights[2]},
 		}
-	} else {
-		return 0.0, fmt.Errorf("unsupported dimension: %d", img.dimension)
 	}
 
 	// Step 7: Interpolate
