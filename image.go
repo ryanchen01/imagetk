@@ -1315,6 +1315,11 @@ func (img *Image) SetSpacing(spacing []float64) error {
 	if len(spacing) != int(img.dimension) {
 		return fmt.Errorf("invalid spacing length: %d", len(spacing))
 	}
+	for _, s := range spacing {
+		if s <= 0 {
+			return fmt.Errorf("invalid spacing: %f", s)
+		}
+	}
 	img.spacing = spacing
 	return nil
 }
