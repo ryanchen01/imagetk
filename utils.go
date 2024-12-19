@@ -7,286 +7,51 @@ import (
 	"reflect"
 )
 
+type converter func(interface{}) interface{}
+
+var pixelTypeConverters = map[int]converter{
+	PixelTypeUInt8: func(v interface{}) interface{} {
+		return uint8(reflect.ValueOf(v).Convert(reflect.TypeOf(uint8(0))).Uint())
+	},
+	PixelTypeInt8: func(v interface{}) interface{} {
+		return int8(reflect.ValueOf(v).Convert(reflect.TypeOf(int8(0))).Int())
+	},
+	PixelTypeUInt16: func(v interface{}) interface{} {
+		return uint16(reflect.ValueOf(v).Convert(reflect.TypeOf(uint16(0))).Uint())
+	},
+	PixelTypeInt16: func(v interface{}) interface{} {
+		return int16(reflect.ValueOf(v).Convert(reflect.TypeOf(int16(0))).Int())
+	},
+	PixelTypeUInt32: func(v interface{}) interface{} {
+		return uint32(reflect.ValueOf(v).Convert(reflect.TypeOf(uint32(0))).Uint())
+	},
+	PixelTypeInt32: func(v interface{}) interface{} {
+		return int32(reflect.ValueOf(v).Convert(reflect.TypeOf(int32(0))).Int())
+	},
+	PixelTypeUInt64: func(v interface{}) interface{} {
+		return uint64(reflect.ValueOf(v).Convert(reflect.TypeOf(uint64(0))).Uint())
+	},
+	PixelTypeInt64: func(v interface{}) interface{} {
+		return int64(reflect.ValueOf(v).Convert(reflect.TypeOf(int64(0))).Int())
+	},
+	PixelTypeFloat32: func(v interface{}) interface{} {
+		return float32(reflect.ValueOf(v).Convert(reflect.TypeOf(float32(0))).Float())
+	},
+	PixelTypeFloat64: func(v interface{}) interface{} {
+		return float64(reflect.ValueOf(v).Convert(reflect.TypeOf(float64(0))).Float())
+	},
+}
+
 func getValueAsPixelType(value any, pixelType int) (any, error) {
-	switch value := value.(type) {
-	case uint8:
-		switch pixelType {
-		case PixelTypeUInt8:
-			return value, nil
-		case PixelTypeInt8:
-			return int8(value), nil
-		case PixelTypeUInt16:
-			return uint16(value), nil
-		case PixelTypeInt16:
-			return int16(value), nil
-		case PixelTypeUInt32:
-			return uint32(value), nil
-		case PixelTypeInt32:
-			return int32(value), nil
-		case PixelTypeUInt64:
-			return uint64(value), nil
-		case PixelTypeInt64:
-			return int64(value), nil
-		case PixelTypeFloat32:
-			return float32(value), nil
-		case PixelTypeFloat64:
-			return float64(value), nil
+	if converter, ok := pixelTypeConverters[pixelType]; ok {
+		switch value.(type) {
+		case uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64, int:
+			return converter(value), nil
 		default:
-			return nil, fmt.Errorf("unknown pixel type")
+			return nil, fmt.Errorf("unsupported value type")
 		}
-	case int8:
-		switch pixelType {
-		case PixelTypeUInt8:
-			return uint8(value), nil
-		case PixelTypeInt8:
-			return value, nil
-		case PixelTypeUInt16:
-			return uint16(value), nil
-		case PixelTypeInt16:
-			return int16(value), nil
-		case PixelTypeUInt32:
-			return uint32(value), nil
-		case PixelTypeInt32:
-			return int32(value), nil
-		case PixelTypeUInt64:
-			return uint64(value), nil
-		case PixelTypeInt64:
-			return int64(value), nil
-		case PixelTypeFloat32:
-			return float32(value), nil
-		case PixelTypeFloat64:
-			return float64(value), nil
-		default:
-			return nil, fmt.Errorf("unknown pixel type")
-		}
-	case uint16:
-		switch pixelType {
-		case PixelTypeUInt8:
-			return uint8(value), nil
-		case PixelTypeInt8:
-			return int8(value), nil
-		case PixelTypeUInt16:
-			return value, nil
-		case PixelTypeInt16:
-			return int16(value), nil
-		case PixelTypeUInt32:
-			return uint32(value), nil
-		case PixelTypeInt32:
-			return int32(value), nil
-		case PixelTypeUInt64:
-			return uint64(value), nil
-		case PixelTypeInt64:
-			return int64(value), nil
-		case PixelTypeFloat32:
-			return float32(value), nil
-		case PixelTypeFloat64:
-			return float64(value), nil
-		default:
-			return nil, fmt.Errorf("unknown pixel type")
-		}
-	case int16:
-		switch pixelType {
-		case PixelTypeUInt8:
-			return uint8(value), nil
-		case PixelTypeInt8:
-			return int8(value), nil
-		case PixelTypeUInt16:
-			return uint16(value), nil
-		case PixelTypeInt16:
-			return value, nil
-		case PixelTypeUInt32:
-			return uint32(value), nil
-		case PixelTypeInt32:
-			return int32(value), nil
-		case PixelTypeUInt64:
-			return uint64(value), nil
-		case PixelTypeInt64:
-			return int64(value), nil
-		case PixelTypeFloat32:
-			return float32(value), nil
-		case PixelTypeFloat64:
-			return float64(value), nil
-		default:
-			return nil, fmt.Errorf("unknown pixel type")
-		}
-	case uint32:
-		switch pixelType {
-		case PixelTypeUInt8:
-			return uint8(value), nil
-		case PixelTypeInt8:
-			return int8(value), nil
-		case PixelTypeUInt16:
-			return uint16(value), nil
-		case PixelTypeInt16:
-			return int16(value), nil
-		case PixelTypeUInt32:
-			return value, nil
-		case PixelTypeInt32:
-			return int32(value), nil
-		case PixelTypeUInt64:
-			return uint64(value), nil
-		case PixelTypeInt64:
-			return int64(value), nil
-		case PixelTypeFloat32:
-			return float32(value), nil
-		case PixelTypeFloat64:
-			return float64(value), nil
-		default:
-			return nil, fmt.Errorf("unknown pixel type")
-		}
-	case int32:
-		switch pixelType {
-		case PixelTypeUInt8:
-			return uint8(value), nil
-		case PixelTypeInt8:
-			return int8(value), nil
-		case PixelTypeUInt16:
-			return uint16(value), nil
-		case PixelTypeInt16:
-			return int16(value), nil
-		case PixelTypeUInt32:
-			return uint32(value), nil
-		case PixelTypeInt32:
-			return value, nil
-		case PixelTypeUInt64:
-			return uint64(value), nil
-		case PixelTypeInt64:
-			return int64(value), nil
-		case PixelTypeFloat32:
-			return float32(value), nil
-		case PixelTypeFloat64:
-			return float64(value), nil
-		default:
-			return nil, fmt.Errorf("unknown pixel type")
-		}
-	case uint64:
-		switch pixelType {
-		case PixelTypeUInt8:
-			return uint8(value), nil
-		case PixelTypeInt8:
-			return int8(value), nil
-		case PixelTypeUInt16:
-			return uint16(value), nil
-		case PixelTypeInt16:
-			return int16(value), nil
-		case PixelTypeUInt32:
-			return uint32(value), nil
-		case PixelTypeInt32:
-			return int32(value), nil
-		case PixelTypeUInt64:
-			return value, nil
-		case PixelTypeInt64:
-			return int64(value), nil
-		case PixelTypeFloat32:
-			return float32(value), nil
-		case PixelTypeFloat64:
-			return float64(value), nil
-		default:
-			return nil, fmt.Errorf("unknown pixel type")
-		}
-	case int64:
-		switch pixelType {
-		case PixelTypeUInt8:
-			return uint8(value), nil
-		case PixelTypeInt8:
-			return int8(value), nil
-		case PixelTypeUInt16:
-			return uint16(value), nil
-		case PixelTypeInt16:
-			return int16(value), nil
-		case PixelTypeUInt32:
-			return uint32(value), nil
-		case PixelTypeInt32:
-			return int32(value), nil
-		case PixelTypeUInt64:
-			return uint64(value), nil
-		case PixelTypeInt64:
-			return value, nil
-		case PixelTypeFloat32:
-			return float32(value), nil
-		case PixelTypeFloat64:
-			return float64(value), nil
-		default:
-			return nil, fmt.Errorf("unknown pixel type")
-		}
-	case float32:
-		switch pixelType {
-		case PixelTypeUInt8:
-			return uint8(value), nil
-		case PixelTypeInt8:
-			return int8(value), nil
-		case PixelTypeUInt16:
-			return uint16(value), nil
-		case PixelTypeInt16:
-			return int16(value), nil
-		case PixelTypeUInt32:
-			return uint32(value), nil
-		case PixelTypeInt32:
-			return int32(value), nil
-		case PixelTypeUInt64:
-			return uint64(value), nil
-		case PixelTypeInt64:
-			return int64(value), nil
-		case PixelTypeFloat32:
-			return value, nil
-		case PixelTypeFloat64:
-			return float64(value), nil
-		default:
-			return nil, fmt.Errorf("unknown pixel type")
-		}
-	case float64:
-		switch pixelType {
-		case PixelTypeUInt8:
-			return uint8(value), nil
-		case PixelTypeInt8:
-			return int8(value), nil
-		case PixelTypeUInt16:
-			return uint16(value), nil
-		case PixelTypeInt16:
-			return int16(value), nil
-		case PixelTypeUInt32:
-			return uint32(value), nil
-		case PixelTypeInt32:
-			return int32(value), nil
-		case PixelTypeUInt64:
-			return uint64(value), nil
-		case PixelTypeInt64:
-			return int64(value), nil
-		case PixelTypeFloat32:
-			return float32(value), nil
-		case PixelTypeFloat64:
-			return value, nil
-		default:
-			return nil, fmt.Errorf("unknown pixel type")
-		}
-	case int:
-		switch pixelType {
-		case PixelTypeUInt8:
-			return uint8(value), nil
-		case PixelTypeInt8:
-			return int8(value), nil
-		case PixelTypeUInt16:
-			return uint16(value), nil
-		case PixelTypeInt16:
-			return int16(value), nil
-		case PixelTypeUInt32:
-			return uint32(value), nil
-		case PixelTypeInt32:
-			return int32(value), nil
-		case PixelTypeUInt64:
-			return uint64(value), nil
-		case PixelTypeInt64:
-			return int64(value), nil
-		case PixelTypeFloat32:
-			return float32(value), nil
-		case PixelTypeFloat64:
-			return float64(value), nil
-		default:
-			return nil, fmt.Errorf("unknown pixel type")
-		}
-	default:
-		return nil, fmt.Errorf("unsupported value type")
 	}
+	return nil, fmt.Errorf("unknown pixel type")
 }
 
 // buildNestedSlice constructs an n-dimensional nested slice from the flat data according to the shape.
