@@ -612,30 +612,18 @@ func (img *Image) GetPixel(index []uint32) (any, error) {
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt8(index []uint32) (uint8, error) {
 	value, err := img.GetPixel(index)
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		return value.(uint8), err
-	case PixelTypeInt8:
-		return uint8(value.(int8)), err
-	case PixelTypeUInt16:
-		return uint8(value.(uint16)), err
-	case PixelTypeInt16:
-		return uint8(value.(int16)), err
-	case PixelTypeUInt32:
-		return uint8(value.(uint32)), err
-	case PixelTypeInt32:
-		return uint8(value.(int32)), err
-	case PixelTypeUInt64:
-		return uint8(value.(uint64)), err
-	case PixelTypeInt64:
-		return uint8(value.(int64)), err
-	case PixelTypeFloat32:
-		return uint8(value.(float32)), err
-	case PixelTypeFloat64:
-		return uint8(value.(float64)), err
-	default:
-		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	if err != nil {
+		return 0, err
 	}
+	if converter, ok := pixelTypeConverters[PixelTypeUInt8]; ok {
+		switch value.(type) {
+		case uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64, int:
+			return converter(value).(uint8), nil
+		default:
+			return 0, fmt.Errorf("unsupported value type")
+		}
+	}
+	return 0, fmt.Errorf("unknown pixel type")
 }
 
 // GetPixelAsInt8 returns the pixel value at the given index as a int8.
@@ -647,30 +635,18 @@ func (img *Image) GetPixelAsUInt8(index []uint32) (uint8, error) {
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt8(index []uint32) (int8, error) {
 	value, err := img.GetPixel(index)
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		return int8(value.(uint8)), err
-	case PixelTypeInt8:
-		return value.(int8), err
-	case PixelTypeUInt16:
-		return int8(value.(uint16)), err
-	case PixelTypeInt16:
-		return int8(value.(int16)), err
-	case PixelTypeUInt32:
-		return int8(value.(uint32)), err
-	case PixelTypeInt32:
-		return int8(value.(int32)), err
-	case PixelTypeUInt64:
-		return int8(value.(uint64)), err
-	case PixelTypeInt64:
-		return int8(value.(int64)), err
-	case PixelTypeFloat32:
-		return int8(value.(float32)), err
-	case PixelTypeFloat64:
-		return int8(value.(float64)), err
-	default:
-		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	if err != nil {
+		return 0, err
 	}
+	if converter, ok := pixelTypeConverters[PixelTypeInt8]; ok {
+		switch value.(type) {
+		case uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64, int:
+			return converter(value).(int8), nil
+		default:
+			return 0, fmt.Errorf("unsupported value type")
+		}
+	}
+	return 0, fmt.Errorf("unknown pixel type")
 }
 
 // GetPixelAsUInt16 returns the pixel value at the given index as a uint16.
@@ -682,30 +658,18 @@ func (img *Image) GetPixelAsInt8(index []uint32) (int8, error) {
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt16(index []uint32) (uint16, error) {
 	value, err := img.GetPixel(index)
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		return uint16(value.(uint8)), err
-	case PixelTypeInt8:
-		return uint16(value.(int8)), err
-	case PixelTypeUInt16:
-		return value.(uint16), err
-	case PixelTypeInt16:
-		return uint16(value.(int16)), err
-	case PixelTypeUInt32:
-		return uint16(value.(uint32)), err
-	case PixelTypeInt32:
-		return uint16(value.(int32)), err
-	case PixelTypeUInt64:
-		return uint16(value.(uint64)), err
-	case PixelTypeInt64:
-		return uint16(value.(int64)), err
-	case PixelTypeFloat32:
-		return uint16(value.(float32)), err
-	case PixelTypeFloat64:
-		return uint16(value.(float64)), err
-	default:
-		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	if err != nil {
+		return 0, err
 	}
+	if converter, ok := pixelTypeConverters[PixelTypeUInt16]; ok {
+		switch value.(type) {
+		case uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64, int:
+			return converter(value).(uint16), nil
+		default:
+			return 0, fmt.Errorf("unsupported value type")
+		}
+	}
+	return 0, fmt.Errorf("unknown pixel type")
 }
 
 // GetPixelAsInt16 returns the pixel value at the given index as a int16.
@@ -717,30 +681,18 @@ func (img *Image) GetPixelAsUInt16(index []uint32) (uint16, error) {
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt16(index []uint32) (int16, error) {
 	value, err := img.GetPixel(index)
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		return int16(value.(uint8)), err
-	case PixelTypeInt8:
-		return int16(value.(int8)), err
-	case PixelTypeUInt16:
-		return int16(value.(uint16)), err
-	case PixelTypeInt16:
-		return value.(int16), err
-	case PixelTypeUInt32:
-		return int16(value.(uint32)), err
-	case PixelTypeInt32:
-		return int16(value.(int32)), err
-	case PixelTypeUInt64:
-		return int16(value.(uint64)), err
-	case PixelTypeInt64:
-		return int16(value.(int64)), err
-	case PixelTypeFloat32:
-		return int16(value.(float32)), err
-	case PixelTypeFloat64:
-		return int16(value.(float64)), err
-	default:
-		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	if err != nil {
+		return 0, err
 	}
+	if converter, ok := pixelTypeConverters[PixelTypeInt16]; ok {
+		switch value.(type) {
+		case uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64, int:
+			return converter(value).(int16), nil
+		default:
+			return 0, fmt.Errorf("unsupported value type")
+		}
+	}
+	return 0, fmt.Errorf("unknown pixel type")
 }
 
 // GetPixelAsUInt32 returns the pixel value at the given index as a uint32.
@@ -752,30 +704,18 @@ func (img *Image) GetPixelAsInt16(index []uint32) (int16, error) {
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt32(index []uint32) (uint32, error) {
 	value, err := img.GetPixel(index)
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		return uint32(value.(uint8)), err
-	case PixelTypeInt8:
-		return uint32(value.(int8)), err
-	case PixelTypeUInt16:
-		return uint32(value.(uint16)), err
-	case PixelTypeInt16:
-		return uint32(value.(int16)), err
-	case PixelTypeUInt32:
-		return value.(uint32), err
-	case PixelTypeInt32:
-		return uint32(value.(int32)), err
-	case PixelTypeUInt64:
-		return uint32(value.(uint64)), err
-	case PixelTypeInt64:
-		return uint32(value.(int64)), err
-	case PixelTypeFloat32:
-		return uint32(value.(float32)), err
-	case PixelTypeFloat64:
-		return uint32(value.(float64)), err
-	default:
-		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	if err != nil {
+		return 0, err
 	}
+	if converter, ok := pixelTypeConverters[PixelTypeUInt32]; ok {
+		switch value.(type) {
+		case uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64, int:
+			return converter(value).(uint32), nil
+		default:
+			return 0, fmt.Errorf("unsupported value type")
+		}
+	}
+	return 0, fmt.Errorf("unknown pixel type")
 }
 
 // GetPixelAsInt32 returns the pixel value at the given index as a int32.
@@ -787,30 +727,18 @@ func (img *Image) GetPixelAsUInt32(index []uint32) (uint32, error) {
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt32(index []uint32) (int32, error) {
 	value, err := img.GetPixel(index)
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		return int32(value.(uint8)), err
-	case PixelTypeInt8:
-		return int32(value.(int8)), err
-	case PixelTypeUInt16:
-		return int32(value.(uint16)), err
-	case PixelTypeInt16:
-		return int32(value.(int16)), err
-	case PixelTypeUInt32:
-		return int32(value.(uint32)), err
-	case PixelTypeInt32:
-		return value.(int32), err
-	case PixelTypeUInt64:
-		return int32(value.(uint64)), err
-	case PixelTypeInt64:
-		return int32(value.(int64)), err
-	case PixelTypeFloat32:
-		return int32(value.(float32)), err
-	case PixelTypeFloat64:
-		return int32(value.(float64)), err
-	default:
-		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	if err != nil {
+		return 0, err
 	}
+	if converter, ok := pixelTypeConverters[PixelTypeInt32]; ok {
+		switch value.(type) {
+		case uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64, int:
+			return converter(value).(int32), nil
+		default:
+			return 0, fmt.Errorf("unsupported value type")
+		}
+	}
+	return 0, fmt.Errorf("unknown pixel type")
 }
 
 // GetPixelAsUInt64 returns the pixel value at the given index as a uint64.
@@ -822,30 +750,18 @@ func (img *Image) GetPixelAsInt32(index []uint32) (int32, error) {
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsUInt64(index []uint32) (uint64, error) {
 	value, err := img.GetPixel(index)
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		return uint64(value.(uint8)), err
-	case PixelTypeInt8:
-		return uint64(value.(int8)), err
-	case PixelTypeUInt16:
-		return uint64(value.(uint16)), err
-	case PixelTypeInt16:
-		return uint64(value.(int16)), err
-	case PixelTypeUInt32:
-		return uint64(value.(uint32)), err
-	case PixelTypeInt32:
-		return uint64(value.(int32)), err
-	case PixelTypeUInt64:
-		return value.(uint64), err
-	case PixelTypeInt64:
-		return uint64(value.(int64)), err
-	case PixelTypeFloat32:
-		return uint64(value.(float32)), err
-	case PixelTypeFloat64:
-		return uint64(value.(float64)), err
-	default:
-		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	if err != nil {
+		return 0, err
 	}
+	if converter, ok := pixelTypeConverters[PixelTypeUInt64]; ok {
+		switch value.(type) {
+		case uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64, int:
+			return converter(value).(uint64), nil
+		default:
+			return 0, fmt.Errorf("unsupported value type")
+		}
+	}
+	return 0, fmt.Errorf("unknown pixel type")
 }
 
 // GetPixelAsInt64 returns the pixel value at the given index as a int64.
@@ -857,30 +773,18 @@ func (img *Image) GetPixelAsUInt64(index []uint32) (uint64, error) {
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsInt64(index []uint32) (int64, error) {
 	value, err := img.GetPixel(index)
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		return int64(value.(uint8)), err
-	case PixelTypeInt8:
-		return int64(value.(int8)), err
-	case PixelTypeUInt16:
-		return int64(value.(uint16)), err
-	case PixelTypeInt16:
-		return int64(value.(int16)), err
-	case PixelTypeUInt32:
-		return int64(value.(uint32)), err
-	case PixelTypeInt32:
-		return int64(value.(int32)), err
-	case PixelTypeUInt64:
-		return int64(value.(uint64)), err
-	case PixelTypeInt64:
-		return value.(int64), err
-	case PixelTypeFloat32:
-		return int64(value.(float32)), err
-	case PixelTypeFloat64:
-		return int64(value.(float64)), err
-	default:
-		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	if err != nil {
+		return 0, err
 	}
+	if converter, ok := pixelTypeConverters[PixelTypeInt64]; ok {
+		switch value.(type) {
+		case uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64, int:
+			return converter(value).(int64), nil
+		default:
+			return 0, fmt.Errorf("unsupported value type")
+		}
+	}
+	return 0, fmt.Errorf("unknown pixel type")
 }
 
 // GetPixelAsFloat32 returns the pixel value at the given index as a float32.
@@ -892,30 +796,18 @@ func (img *Image) GetPixelAsInt64(index []uint32) (int64, error) {
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsFloat32(index []uint32) (float32, error) {
 	value, err := img.GetPixel(index)
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		return float32(value.(uint8)), err
-	case PixelTypeInt8:
-		return float32(value.(int8)), err
-	case PixelTypeUInt16:
-		return float32(value.(uint16)), err
-	case PixelTypeInt16:
-		return float32(value.(int16)), err
-	case PixelTypeUInt32:
-		return float32(value.(uint32)), err
-	case PixelTypeInt32:
-		return float32(value.(int32)), err
-	case PixelTypeUInt64:
-		return float32(value.(uint64)), err
-	case PixelTypeInt64:
-		return float32(value.(int64)), err
-	case PixelTypeFloat32:
-		return value.(float32), err
-	case PixelTypeFloat64:
-		return float32(value.(float64)), err
-	default:
-		return 0, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	if err != nil {
+		return 0, err
 	}
+	if converter, ok := pixelTypeConverters[PixelTypeFloat32]; ok {
+		switch value.(type) {
+		case uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64, int:
+			return converter(value).(float32), nil
+		default:
+			return 0, fmt.Errorf("unsupported value type")
+		}
+	}
+	return 0, fmt.Errorf("unknown pixel type")
 }
 
 // GetPixelAsFloat64 returns the pixel value at the given index as a float64.
@@ -927,30 +819,18 @@ func (img *Image) GetPixelAsFloat32(index []uint32) (float32, error) {
 //   - error: An error if the index is out of range.
 func (img *Image) GetPixelAsFloat64(index []uint32) (float64, error) {
 	value, err := img.GetPixel(index)
-	switch img.pixelType {
-	case PixelTypeUInt8:
-		return float64(value.(uint8)), err
-	case PixelTypeInt8:
-		return float64(value.(int8)), err
-	case PixelTypeUInt16:
-		return float64(value.(uint16)), err
-	case PixelTypeInt16:
-		return float64(value.(int16)), err
-	case PixelTypeUInt32:
-		return float64(value.(uint32)), err
-	case PixelTypeInt32:
-		return float64(value.(int32)), err
-	case PixelTypeUInt64:
-		return float64(value.(uint64)), err
-	case PixelTypeInt64:
-		return float64(value.(int64)), err
-	case PixelTypeFloat32:
-		return float64(value.(float32)), err
-	case PixelTypeFloat64:
-		return value.(float64), err
-	default:
-		return -1, fmt.Errorf("unsupported pixel type: %d", img.pixelType)
+	if err != nil {
+		return 0, err
 	}
+	if converter, ok := pixelTypeConverters[PixelTypeFloat64]; ok {
+		switch value.(type) {
+		case uint8, int8, uint16, int16, uint32, int32, uint64, int64, float32, float64, int:
+			return converter(value).(float64), nil
+		default:
+			return 0, fmt.Errorf("unsupported value type")
+		}
+	}
+	return 0, fmt.Errorf("unknown pixel type")
 }
 
 // AsType creates a new Image with the specified pixel type and copies the pixel data from the current image.
@@ -1347,13 +1227,13 @@ func (img *Image) SetPixel(index []uint32, value any) error {
 		}
 		idx = idx*img.size[i] + index[i]
 	}
-	bytesPerPixel := img.bytesPerPixel
+	bytesPerPixel := uint32(img.bytesPerPixel)
 
 	valueBytes, err := getValueAsBytes(value)
 	if err != nil {
 		return err
 	}
-	copy(img.pixels[idx*uint32(bytesPerPixel):idx*uint32(bytesPerPixel)+uint32(bytesPerPixel)], valueBytes)
+	copy(img.pixels[idx*bytesPerPixel:idx*bytesPerPixel+bytesPerPixel], valueBytes)
 
 	return nil
 }
