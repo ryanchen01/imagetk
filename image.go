@@ -1347,13 +1347,13 @@ func (img *Image) SetPixel(index []uint32, value any) error {
 		}
 		idx = idx*img.size[i] + index[i]
 	}
-	bytesPerPixel := img.bytesPerPixel
+	bytesPerPixel := uint32(img.bytesPerPixel)
 
 	valueBytes, err := getValueAsBytes(value)
 	if err != nil {
 		return err
 	}
-	copy(img.pixels[idx*uint32(bytesPerPixel):idx*uint32(bytesPerPixel)+uint32(bytesPerPixel)], valueBytes)
+	copy(img.pixels[idx*bytesPerPixel:idx*bytesPerPixel+bytesPerPixel], valueBytes)
 
 	return nil
 }

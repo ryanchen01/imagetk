@@ -51,24 +51,68 @@ func invert3x3(m [9]float64) ([9]float64, error) {
 // solveLinearSystem solves the linear system Ax = b using Gaussian elimination.
 func solveLinearSystem(A [][]float64, b []float64) ([]float64, error) {
 	n := len(A)
-
-	// Augment A with b
-	augmented := make([][]float64, n)
-	for i := range A {
-		augmented[i] = append(append([]float64{}, A[i]...), b[i])
+	if n == 0 {
+		return nil, fmt.Errorf("empty matrix")
 	}
 
-	// Gaussian elimination
+	// Check dimensions
+	for i := range A {
+		if len(A[i]) != n {
+			return nil, fmt.Errorf("matrix A must be square")
+		}
+	}
+	if len(b) != n {
+		return nil, fmt.Errorf("dimension mismatch between A and b")
+	}
+
+	// Allocate a single contiguous slice for [A|b]
+	// augmented layout: row i in augmented[i*(n+1): (i+1)*(n+1)]
+	augmented := make([]float64, n*(n+1))
 	for i := 0; i < n; i++ {
-		// Make the diagonal element 1
-		if math.Abs(augmented[i][i]) < 1e-9 {
+		rowStart := i * (n + 1)
+		copy(augmented[rowStart:rowStart+n], A[i])
+		augmented[rowStart+n] = b[i]
+	}
+
+	// Gaussian elimination with partial pivoting
+	for i := 0; i < n; i++ {
+		pivotRowStart := i * (n + 1)
+		// Partial pivoting
+		maxRow := i
+		maxVal := math.Abs(augmented[pivotRowStart+i])
+		for r := i + 1; r < n; r++ {
+			val := math.Abs(augmented[r*(n+1)+i])
+			if val > maxVal {
+				maxVal = val
+				maxRow = r
+			}
+		}
+
+		if maxVal < 1e-14 {
 			return nil, fmt.Errorf("matrix is singular or nearly singular")
 		}
 
-		for k := i + 1; k < n; k++ {
-			ratio := augmented[k][i] / augmented[i][i]
-			for j := i; j <= n; j++ {
-				augmented[k][j] -= ratio * augmented[i][j]
+		// Swap rows if needed
+		if maxRow != i {
+			for col := 0; col <= n; col++ {
+				idx1 := i*(n+1) + col
+				idx2 := maxRow*(n+1) + col
+				augmented[idx1], augmented[idx2] = augmented[idx2], augmented[idx1]
+			}
+		}
+
+		pivot := augmented[pivotRowStart+i]
+		invPivot := 1.0 / pivot
+
+		// Eliminate below pivot
+		for r := i + 1; r < n; r++ {
+			rowStart := r * (n + 1)
+			if augmented[rowStart+i] != 0 {
+				factor := augmented[rowStart+i] * invPivot
+				augmented[rowStart+i] = 0
+				for c := i + 1; c <= n; c++ {
+					augmented[rowStart+c] -= factor * augmented[pivotRowStart+c]
+				}
 			}
 		}
 	}
@@ -76,11 +120,13 @@ func solveLinearSystem(A [][]float64, b []float64) ([]float64, error) {
 	// Back substitution
 	x := make([]float64, n)
 	for i := n - 1; i >= 0; i-- {
-		sum := augmented[i][n]
+		rowStart := i * (n + 1)
+		sum := augmented[rowStart+n]
+		diag := augmented[rowStart+i]
 		for j := i + 1; j < n; j++ {
-			sum -= augmented[i][j] * x[j]
+			sum -= augmented[rowStart+j] * x[j]
 		}
-		x[i] = sum / augmented[i][i]
+		x[i] = sum / diag
 	}
 
 	return x, nil
