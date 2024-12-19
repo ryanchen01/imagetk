@@ -1,6 +1,7 @@
 package imagetk
 
 import (
+	"encoding/binary"
 	"math"
 	"testing"
 )
@@ -129,6 +130,96 @@ func TestInvert3x3(t *testing.T) {
 						break
 					}
 				}
+			}
+		})
+	}
+}
+
+func TestGetPixelFromPoint(t *testing.T) {
+	// Create a 2D test image with known values
+	create2DImage := func(pixelType int) *Image {
+		img := &Image{
+			dimension: 2,
+			size:      []uint32{3, 3},
+			spacing:   []float64{1.0, 1.0},
+			origin:    []float64{0.0, 0.0},
+			direction: [9]float64{1, 0, 0, 0, 1, 0, 0, 0, 1},
+			pixelType: pixelType,
+		}
+
+		// Create test data: [1 2 3; 4 5 6; 7 8 9]
+		switch pixelType {
+		case PixelTypeUInt8:
+			img.pixels = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
+		case PixelTypeFloat32:
+			data := []float32{1, 2, 3, 4, 5, 6, 7, 8, 9}
+			img.pixels = make([]byte, len(data)*4)
+			for i, v := range data {
+				binary.LittleEndian.PutUint32(img.pixels[i*4:], math.Float32bits(v))
+			}
+		}
+		return img
+	}
+
+	tests := []struct {
+		name     string
+		img      *Image
+		point    []float64
+		fillType int
+		want     float64
+		wantErr  bool
+	}{
+		{
+			name:     "center point uint8",
+			img:      create2DImage(PixelTypeUInt8),
+			point:    []float64{1.0, 1.0},
+			fillType: FillTypeNearest,
+			want:     5.0,
+			wantErr:  false,
+		},
+		{
+			name:     "interpolated point uint8",
+			img:      create2DImage(PixelTypeUInt8),
+			point:    []float64{0.5, 0.5},
+			fillType: FillTypeNearest,
+			want:     3.0, // Average of 1,2,4,5
+			wantErr:  false,
+		},
+		{
+			name:     "outside point with zero fill",
+			img:      create2DImage(PixelTypeUInt8),
+			point:    []float64{-1.0, -1.0},
+			fillType: FillTypeZero,
+			want:     0.0,
+			wantErr:  false,
+		},
+		{
+			name:     "outside point with nearest fill",
+			img:      create2DImage(PixelTypeUInt8),
+			point:    []float64{-0.5, -0.5},
+			fillType: FillTypeNearest,
+			want:     1.0,
+			wantErr:  false,
+		},
+		{
+			name:     "center point float32",
+			img:      create2DImage(PixelTypeFloat32),
+			point:    []float64{1.0, 1.0},
+			fillType: FillTypeNearest,
+			want:     5.0,
+			wantErr:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.img.GetPixelFromPoint(tt.point, tt.fillType)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetPixelFromPoint() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && math.Abs(got-tt.want) > 1e-6 {
+				t.Errorf("GetPixelFromPoint() = %v, want %v", got, tt.want)
 			}
 		})
 	}

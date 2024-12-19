@@ -88,10 +88,8 @@ func linearResample(img *Image, interpolator LinearInterpolator) (*Image, error)
 	}
 
 	numGoroutines := uint32(runtime.NumCPU())
-	chunkSize := uint32(numPixels) / numGoroutines
-	if chunkSize*numGoroutines < uint32(numPixels) {
-		chunkSize += 1
-	}
+	chunkSize := (uint32(numPixels) + numGoroutines - 1) / numGoroutines
+
 	wg := sync.WaitGroup{}
 	for chunk := uint32(0); chunk < numGoroutines; chunk++ {
 		start := chunk * chunkSize
@@ -103,7 +101,7 @@ func linearResample(img *Image, interpolator LinearInterpolator) (*Image, error)
 		go func(start, end uint32) {
 			defer wg.Done()
 			for i := start; i < end; i++ {
-				point := make([]float64, len(interpolator.Size))
+				physicalPoint := make([]float64, len(interpolator.Size))
 				idx := i
 				indices := make([]float64, len(interpolator.Size))
 				for j := 0; j < len(interpolator.Size); j++ {
@@ -111,14 +109,15 @@ func linearResample(img *Image, interpolator LinearInterpolator) (*Image, error)
 					idx %= uint32(strides[j])
 				}
 
-				for j := 0; j < len(interpolator.Size); j++ {
-					for k := 0; k < len(interpolator.Size); k++ {
-						point[j] += interpolator.Direction[j*3+k] * indices[k] * interpolator.Spacing[k]
+				// Apply direction matrix correctly
+				for j := 0; j < len(interpolator.Size); j++ { // physical dimensions
+					for k := 0; k < len(interpolator.Size); k++ { // image dimensions
+						physicalPoint[j] += interpolator.Direction[j*3+k] * indices[k]
 					}
-					point[j] += interpolator.Origin[j]
+					physicalPoint[j] = physicalPoint[j]*interpolator.Spacing[j] + interpolator.Origin[j]
 				}
 
-				value, err := img.GetPixelFromPoint(point, interpolator.FillType)
+				value, err := img.GetPixelFromPoint(physicalPoint, interpolator.FillType)
 				if err != nil {
 					return
 				}
@@ -187,10 +186,8 @@ func nearestResample(img *Image, interpolator NearestInterpolator) (*Image, erro
 	}
 
 	numGoroutines := uint32(runtime.NumCPU())
-	chunkSize := uint32(numPixels) / numGoroutines
-	if chunkSize*numGoroutines < uint32(numPixels) {
-		chunkSize += 1
-	}
+	chunkSize := (uint32(numPixels) + numGoroutines - 1) / numGoroutines
+
 	wg := sync.WaitGroup{}
 	for chunk := uint32(0); chunk < numGoroutines; chunk++ {
 		start := chunk * chunkSize
@@ -202,7 +199,7 @@ func nearestResample(img *Image, interpolator NearestInterpolator) (*Image, erro
 		go func(start, end uint32) {
 			defer wg.Done()
 			for i := start; i < end; i++ {
-				point := make([]float64, len(interpolator.Size))
+				physicalPoint := make([]float64, len(interpolator.Size))
 				idx := i
 				indices := make([]float64, len(interpolator.Size))
 				for j := 0; j < len(interpolator.Size); j++ {
@@ -210,19 +207,20 @@ func nearestResample(img *Image, interpolator NearestInterpolator) (*Image, erro
 					idx %= uint32(strides[j])
 				}
 
-				for j := 0; j < len(interpolator.Size); j++ {
-					for k := 0; k < len(interpolator.Size); k++ {
-						point[j] += interpolator.Direction[j*3+k] * indices[k] * interpolator.Spacing[k]
+				// Apply direction matrix correctly
+				for j := 0; j < len(interpolator.Size); j++ { // physical dimensions
+					for k := 0; k < len(interpolator.Size); k++ { // image dimensions
+						physicalPoint[j] += interpolator.Direction[j*3+k] * indices[k]
 					}
-					point[j] += interpolator.Origin[j]
+					physicalPoint[j] = physicalPoint[j]*interpolator.Spacing[j] + interpolator.Origin[j]
 				}
 
 				// Transform the physical point back to input image space
 				inputPoint := make([]float64, len(interpolator.Size))
-				for j := range point {
+				for j := range physicalPoint {
 					// Convert physical point to input image space using correct transformation
 					// Subtract 0.5 because pixel coordinates are at center of pixel
-					inputPoint[j] = ((point[j] - img.origin[j]) / img.spacing[j]) - 0.5
+					inputPoint[j] = ((physicalPoint[j] - img.origin[j]) / img.spacing[j]) - 0.5
 					// Round to nearest integer for nearest neighbor
 					inputPoint[j] = float64(int(inputPoint[j]+0.5)) + 0.5
 				}
