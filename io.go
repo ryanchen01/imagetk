@@ -76,7 +76,7 @@ func readImageTypeRaw(filename string, pixelType int) (*Image, error) {
 	// This is a placeholder - you should modify these values based on your needs
 	img.dimension = 3
 	img.size = make([]uint32, img.dimension)
-	xy := uint32(math.Pow(float64(totalPixels), 1.0/float64(img.dimension)))
+	xy := uint32(math.Round(math.Pow(float64(totalPixels), 1.0/float64(img.dimension))))
 	z := uint32(totalPixels / int64(xy*xy))
 	img.size = []uint32{xy, xy, z}
 	img.bytesPerPixel = bytesPerPixel

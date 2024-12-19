@@ -48,6 +48,44 @@ func invert3x3(m [9]float64) ([9]float64, error) {
 	}, nil
 }
 
+// solveLinearSystem solves the linear system Ax = b using Gaussian elimination.
+func solveLinearSystem(A [][]float64, b []float64) ([]float64, error) {
+	n := len(A)
+
+	// Augment A with b
+	augmented := make([][]float64, n)
+	for i := range A {
+		augmented[i] = append(append([]float64{}, A[i]...), b[i])
+	}
+
+	// Gaussian elimination
+	for i := 0; i < n; i++ {
+		// Make the diagonal element 1
+		if math.Abs(augmented[i][i]) < 1e-9 {
+			return nil, fmt.Errorf("matrix is singular or nearly singular")
+		}
+
+		for k := i + 1; k < n; k++ {
+			ratio := augmented[k][i] / augmented[i][i]
+			for j := i; j <= n; j++ {
+				augmented[k][j] -= ratio * augmented[i][j]
+			}
+		}
+	}
+
+	// Back substitution
+	x := make([]float64, n)
+	for i := n - 1; i >= 0; i-- {
+		sum := augmented[i][n]
+		for j := i + 1; j < n; j++ {
+			sum -= augmented[i][j] * x[j]
+		}
+		x[i] = sum / augmented[i][i]
+	}
+
+	return x, nil
+}
+
 // GetPixelFromPoint returns the interpolated pixel value at a given physical point in the image.
 // Parameters:
 //   - point: A slice of float64 representing the physical point.
@@ -58,51 +96,28 @@ func invert3x3(m [9]float64) ([9]float64, error) {
 //   - error: An error if the operation fails.
 func (img *Image) GetPixelFromPoint(point []float64, fillType int) (float64, error) {
 	// Step 1: Compute y = x - o
-	y := make([]float64, img.dimension)
-	for i := 0; i < int(img.dimension); i++ {
-		y[i] = point[i] - img.origin[i]
-	}
-
-	// Step 2: Compute D_inv
-	var D_inv []float64
-	if img.dimension == 2 {
-		D := [4]float64{
-			img.direction[0], img.direction[1],
-			img.direction[3], img.direction[4],
-		}
-		inv, err := invert2x2(D)
-		if err != nil {
-			return 0.0, err
-		}
-		D_inv = inv[:]
-	} else if img.dimension == 3 {
-		D := [9]float64{
-			img.direction[0], img.direction[1], img.direction[2],
-			img.direction[3], img.direction[4], img.direction[5],
-			img.direction[6], img.direction[7], img.direction[8],
-		}
-		inv, err := invert3x3(D)
-		if err != nil {
-			return 0.0, err
-		}
-		D_inv = inv[:]
-	}
-
-	// Step 3: Compute p = D_inv * y
 	p := make([]float64, img.dimension)
-	if img.dimension == 2 {
-		p[0] = D_inv[0]*y[0] + D_inv[1]*y[1]
-		p[1] = D_inv[2]*y[0] + D_inv[3]*y[1]
-	} else {
-		p[0] = D_inv[0]*y[0] + D_inv[1]*y[1] + D_inv[2]*y[2]
-		p[1] = D_inv[3]*y[0] + D_inv[4]*y[1] + D_inv[5]*y[2]
-		p[2] = D_inv[6]*y[0] + D_inv[7]*y[1] + D_inv[8]*y[2]
+	for i := 0; i < int(img.dimension); i++ {
+		p[i] = point[i] - img.origin[i]
 	}
 
-	// Step 4: Compute i_float = p / s
-	i_float := make([]float64, img.dimension)
-	for i := 0; i < int(img.dimension); i++ {
-		i_float[i] = p[i] / img.spacing[i]
+	var A [][]float64
+	if img.dimension == 2 {
+		A = [][]float64{
+			{img.direction[0] * img.spacing[0], img.direction[3] * img.spacing[1]},
+			{img.direction[1] * img.spacing[0], img.direction[4] * img.spacing[1]},
+		}
+	} else if img.dimension == 3 {
+		A = [][]float64{
+			{img.direction[0] * img.spacing[0], img.direction[3] * img.spacing[1], img.direction[6] * img.spacing[2]},
+			{img.direction[1] * img.spacing[0], img.direction[4] * img.spacing[1], img.direction[7] * img.spacing[2]},
+			{img.direction[2] * img.spacing[0], img.direction[5] * img.spacing[1], img.direction[8] * img.spacing[2]},
+		}
+	}
+
+	i_float, err := solveLinearSystem(A, p)
+	if err != nil {
+		return 0.0, err
 	}
 
 	// Step 5: Compute floor and ceil indices for interpolation

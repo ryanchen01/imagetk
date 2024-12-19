@@ -189,3 +189,78 @@ func TestNearestInterpolator(t *testing.T) {
 		t.Errorf("Expected corner pixel value to be %v, got %v", expectedCorner, cornerValue)
 	}
 }
+
+func TestLinearInterpolatorBoundaryPixels(t *testing.T) {
+	pixelData := [][]float32{
+		{1, 1},
+		{1, 1},
+	}
+	img, err := GetImageFromArray(pixelData)
+	if err != nil {
+		t.Fatalf("Failed to create image: %v", err)
+	}
+
+	interpolator := LinearInterpolator{
+		Size:      []uint32{4, 4},
+		Spacing:   []float64{1, 1},
+		Origin:    []float64{0, 0},
+		Direction: [9]float64{1, 0, 0, 0, 1, 0, 0, 0, 1},
+		FillType:  FillTypeZero,
+	}
+	newImg, err := img.Resample(interpolator)
+	if err != nil {
+		t.Fatalf("Resample failed: %v", err)
+	}
+
+	// Test out-of-bounds pixel
+	pixelValue, err := newImg.GetPixelAsFloat32([]uint32{3, 3})
+	if err != nil {
+		t.Fatalf("Failed to get pixel: %v", err)
+	}
+	if pixelValue != 0 {
+		t.Errorf("Expected 0 for out-of-bounds pixel, got %v", pixelValue)
+	}
+}
+
+func TestLinearInterpolatorDirectionMatrix(t *testing.T) {
+	pixelData := [][]float32{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	}
+	img, err := GetImageFromArray(pixelData)
+	if err != nil {
+		t.Fatalf("Failed to create image: %v", err)
+	}
+
+	interpolator := LinearInterpolator{
+		Size:      []uint32{3, 3},
+		Spacing:   []float64{1, 1},
+		Origin:    []float64{2, 0},
+		Direction: [9]float64{0, -1, 0, 1, 0, 0, 0, 0, 1}, // 90-degree rotation
+		FillType:  FillTypeNearest,
+	}
+
+	newImg, err := img.Resample(interpolator)
+	if err != nil {
+		t.Fatalf("Resample failed: %v", err)
+	}
+
+	expected := [][]float32{
+		{3, 6, 9},
+		{2, 5, 8},
+		{1, 4, 7},
+	}
+
+	for y := 0; y < 3; y++ {
+		for x := 0; x < 3; x++ {
+			pixelValue, err := newImg.GetPixelAsFloat32([]uint32{uint32(x), uint32(y)})
+			if err != nil {
+				t.Fatalf("Failed to get pixel: %v", err)
+			}
+			if pixelValue != expected[y][x] {
+				t.Errorf("Expected %v, got %v", expected[y][x], pixelValue)
+			}
+		}
+	}
+}
