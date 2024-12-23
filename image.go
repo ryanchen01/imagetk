@@ -890,7 +890,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			newPixelData = img.pixels
 		case PixelTypeInt8:
 			for i := 0; i < numPixels; i++ {
-				newPixelData[i] = byte(uint8(img.pixels[i]))
+				newPixelData[i] = byte(uint8(int8(img.pixels[i])))
 			}
 		case PixelTypeUInt16:
 			for i := 0; i < numPixels; i++ {
@@ -898,7 +898,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt16:
 			for i := 0; i < numPixels; i++ {
-				newPixelData[i] = byte(uint8(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2])))
+				newPixelData[i] = byte(uint8(int16(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2]))))
 			}
 		case PixelTypeUInt32:
 			for i := 0; i < numPixels; i++ {
@@ -906,7 +906,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt32:
 			for i := 0; i < numPixels; i++ {
-				newPixelData[i] = byte(uint8(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4])))
+				newPixelData[i] = byte(uint8(int32(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))))
 			}
 		case PixelTypeUInt64:
 			for i := 0; i < numPixels; i++ {
@@ -914,7 +914,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt64:
 			for i := 0; i < numPixels; i++ {
-				newPixelData[i] = byte(uint8(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8])))
+				newPixelData[i] = byte(uint8(int64(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))))
 			}
 		case PixelTypeFloat32:
 			for i := 0; i < numPixels; i++ {
@@ -941,7 +941,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt16:
 			for i := 0; i < numPixels; i++ {
-				newPixelData[i] = byte(int8(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2])))
+				newPixelData[i] = byte(int8(int16(binary.LittleEndian.Uint16(img.pixels[i*2 : i*2+2]))))
 			}
 		case PixelTypeUInt32:
 			for i := 0; i < numPixels; i++ {
@@ -949,7 +949,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt32:
 			for i := 0; i < numPixels; i++ {
-				newPixelData[i] = byte(int8(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4])))
+				newPixelData[i] = byte(int8(int32(binary.LittleEndian.Uint32(img.pixels[i*4 : i*4+4]))))
 			}
 		case PixelTypeUInt64:
 			for i := 0; i < numPixels; i++ {
@@ -957,7 +957,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt64:
 			for i := 0; i < numPixels; i++ {
-				newPixelData[i] = byte(int8(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8])))
+				newPixelData[i] = byte(int8(int64(binary.LittleEndian.Uint64(img.pixels[i*8 : i*8+8]))))
 			}
 		case PixelTypeFloat32:
 			for i := 0; i < numPixels; i++ {
@@ -978,13 +978,13 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt8:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(img.pixels[i]))
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(int8(img.pixels[i])))
 			}
 		case PixelTypeUInt16:
 			newPixelData = img.pixels
 		case PixelTypeInt16:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2])))
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(int16(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2]))))
 			}
 		case PixelTypeUInt32:
 			for i := 0; i < numPixels; i++ {
@@ -992,7 +992,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt32:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4])))
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(int32(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4]))))
 			}
 		case PixelTypeUInt64:
 			for i := 0; i < numPixels; i++ {
@@ -1000,7 +1000,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt64:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8])))
+				binary.LittleEndian.PutUint16(newPixelData[i*2:i*2+2], uint16(int64(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8]))))
 			}
 		case PixelTypeFloat32:
 			for i := 0; i < numPixels; i++ {
@@ -1107,7 +1107,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt8:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(img.pixels[i])))
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(int8(img.pixels[i]))))
 			}
 		case PixelTypeUInt16:
 			for i := 0; i < numPixels; i++ {
@@ -1115,7 +1115,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt16:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2]))))
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(int16(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2])))))
 			}
 		case PixelTypeUInt32:
 			for i := 0; i < numPixels; i++ {
@@ -1123,7 +1123,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt32:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4]))))
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(int32(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4])))))
 			}
 		case PixelTypeUInt64:
 			for i := 0; i < numPixels; i++ {
@@ -1131,7 +1131,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt64:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8]))))
+				binary.LittleEndian.PutUint32(newPixelData[i*4:i*4+4], math.Float32bits(float32(int64(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8])))))
 			}
 		case PixelTypeFloat32:
 			newPixelData = img.pixels
@@ -1150,7 +1150,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt8:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(img.pixels[i])))
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(int8(img.pixels[i]))))
 			}
 		case PixelTypeUInt16:
 			for i := 0; i < numPixels; i++ {
@@ -1158,7 +1158,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt16:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2]))))
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(int16(binary.LittleEndian.Uint16(img.pixels[i*2:i*2+2])))))
 			}
 		case PixelTypeUInt32:
 			for i := 0; i < numPixels; i++ {
@@ -1166,7 +1166,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt32:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4]))))
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(int32(binary.LittleEndian.Uint32(img.pixels[i*4:i*4+4])))))
 			}
 		case PixelTypeUInt64:
 			for i := 0; i < numPixels; i++ {
@@ -1174,7 +1174,7 @@ func (img *Image) AsType(pixelType int) (*Image, error) {
 			}
 		case PixelTypeInt64:
 			for i := 0; i < numPixels; i++ {
-				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8]))))
+				binary.LittleEndian.PutUint64(newPixelData[i*8:i*8+8], math.Float64bits(float64(int64(binary.LittleEndian.Uint64(img.pixels[i*8:i*8+8])))))
 			}
 		case PixelTypeFloat32:
 			for i := 0; i < numPixels; i++ {
